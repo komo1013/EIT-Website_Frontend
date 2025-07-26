@@ -1,0 +1,99 @@
+body
+{
+    background-color: #ffffff;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+.button-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 50px;
+    }
+button
+{
+    text-align: center;
+    margin: 15px;
+    padding: 20px 20px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    background-color: #333;
+}
+#red
+{
+    background-color: #e5231f;
+    color: white;
+    padding: 10px 20px;
+    border: black 2px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#red:hover
+{
+    background-color: #b71c1c;
+}
+
+#blue
+{
+    background-color: #3a76f0;
+    color: white;
+    padding: 10px 20px;
+    border: black 2px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#blue:hover
+{
+    background-color: #2a5bbf;
+}
+#Dis_blue
+{
+    background-color: #5865f2;
+    color: white;
+    padding: 10px 20px;
+    border: black 2px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#Dis_blue:hover
+{
+    background-color: #4752c4;
+}
+#green
+{
+    background-color: #288732;
+    color: white;
+    padding: 10px 20px;
+    border: black 2px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#green:hover
+{
+    background-color: #1f6a24;
+}
+#red_rz
+{
+    background-color: #d72305;
+    color: white;
+    padding: 10px 20px;
+    border: black 2px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#red_rz:hover
+{
+    background-color: #b71c1c;
+}
+#Con_bild
+{
+    display: block;
+    margin: 0 auto;
+    width: 400px;
+    height: auto;
+}
+h1, h2, h3
+{
+    text-align: center;
+}
