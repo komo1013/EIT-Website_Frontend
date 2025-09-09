@@ -73,7 +73,9 @@ function AccDropdownLoggedIn() {
         </DropdownTrigger>
         <DropdownMenu aria-label="Dynamic Actions Logged In">
           <DropdownItem key={"settings"}>
-            <p className="text-md">Account settings</p>
+            <Link href="/account" passHref>
+              <p className="text-md">Account settings</p>
+            </Link>
           </DropdownItem>
           <DropdownItem
             key="theme"
@@ -95,7 +97,12 @@ function AccDropdownLoggedIn() {
               }
             ></Switch>
           </DropdownItem>
-          <DropdownItem key={"logout"} className="text-danger" color="danger" onPress={() => signOut()}>
+          <DropdownItem
+            key={"logout"}
+            className="text-danger"
+            color="danger"
+            onPress={() => signOut()}
+          >
             <p className="text-md">Logout</p>
           </DropdownItem>
         </DropdownMenu>
@@ -164,7 +171,7 @@ function AccDropdownLoggedOut() {
 }
 
 export default function App() {
-const { data: session, status: isAuthenticated } = useSession()
+  const { data: session, status: isAuthenticated } = useSession();
 
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
@@ -206,7 +213,11 @@ const { data: session, status: isAuthenticated } = useSession()
       </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem>
-          {isAuthenticated === "authenticated" ? <AccDropdownLoggedIn /> : <AccDropdownLoggedOut />}
+          {isAuthenticated === "authenticated" ? (
+            <AccDropdownLoggedIn />
+          ) : (
+            <AccDropdownLoggedOut />
+          )}
         </NavbarItem>
       </NavbarContent>
       <NavbarMenu className="bg-opacity-60 blur-full w-full md:w-1/2 lg:w-1/3">

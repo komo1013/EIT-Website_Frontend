@@ -2,13 +2,40 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createDirectus, rest, authentication, readMe } from "@directus/sdk";
 
-const client = createDirectus(process.env.DIRECTUS_URL)
+const client = createDirectus(process.env.NEXT_PUBLIC_DIRECTUS_URL)
   .with(rest())
   .with(
     authentication("cookie", {
       credentials: "include",
     })
   );
+
+async function refreshAccessToken(token) {
+  try {
+    // Call Directus to refresh the token
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_DIRECTUS_URL}/auth/refresh`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: token.refreshToken }),
+      }
+    );
+    const refreshedTokens = await response.json();
+
+    if (!response.ok) throw refreshedTokens;
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.data.access_token,
+      accessTokenExpires: Date.now() + refreshedTokens.data.expires * 1000, // adjust if needed
+      refreshToken: refreshedTokens.data.refresh_token ?? token.refreshToken, // fallback to old refresh token
+    };
+  } catch (error) {
+    console.error("Error refreshing access token", error);
+    return { ...token, error: "RefreshAccessTokenError" };
+  }
+}
 
 export const authOptions = {
   providers: [
@@ -56,6 +83,7 @@ export const authOptions = {
   jwt: { secret: process.env.JWT_SECRET, encryption: true },
   callbacks: {
     async jwt({ token, user }) {
+      // Initial sign-in
       if (user) {
         token.id = user.id;
         token.email = user.email;
