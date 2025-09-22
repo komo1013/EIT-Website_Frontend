@@ -75,7 +75,7 @@ export default function App() {
       <NavbarMenu className="bg-background/95 backdrop-blur-md w-full md:w-1/2 lg:w-1/3">
         {/* This is a menu that is only visible on mobile devices. */}
         <NavbarMenuItem key="info">
-          <Link className="w-full text-foreground py-5" href="/info">
+          <Link className="w-full text-foreground py-5" href="/about">
             Wer sind wir?
           </Link>
         </NavbarMenuItem>
