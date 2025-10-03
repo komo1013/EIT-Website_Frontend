@@ -1,4 +1,6 @@
 import { Fira_Code as FontMono, Inter as FontSans, Ubuntu as FontUbuntu, Doto as FontDoto, Montserrat as FontMontserrat, Sixtyfour as FontSixtyFour} from "next/font/google";
+import localFont from 'next/font/local';
+
 
 export const fontSans = FontSans({
   subsets: ["latin"],
@@ -30,4 +32,10 @@ export const fontMontserrat = FontMontserrat({
 export const fontSixtyFour = FontSixtyFour({
   subsets: ["latin"],
   variable: "--font-sixtyfour",
+});
+
+export const fontMelodrama = localFont({
+  src: './Melodrama-Variable.woff2',
+  display: 'swap',
+  variable: '--font-melodrama',
 });

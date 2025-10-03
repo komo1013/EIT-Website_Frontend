@@ -19,4 +19,8 @@
   .font-sixtyfour {
     font-family: var(--font-sixtyfour), ui-sans-serif, system-ui, sans-serif;
   }
+
+  .font-melodrama {
+    font-family: var(--font-melodrama), ui-sans-serif, system-ui, sans-serif;
+  }
 }
