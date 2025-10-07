@@ -1,13 +1,13 @@
 "use client";
 
 import { HeroUIProvider } from "@heroui/react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeProvider as NextThemesProvider, type Attribute } from "next-themes";
 import { useRouter } from "next/navigation";
 
 export interface ProvidersProps {
   children: React.ReactNode;
   themeProps?: {
-    attribute?: string;
+    attribute?: Attribute | Attribute[];
     defaultTheme?: string;
     enableSystem?: boolean;
   };

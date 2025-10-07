@@ -1,6 +1,6 @@
 "use client";
-import Footer from "@/components/footer";
-import NavBar from "@/components/navbar_radix";
+import NavBar from "@/components/navbar";
+import Image from "next/image";
 
 export default function Info() {
   return (
@@ -9,14 +9,17 @@ export default function Info() {
         <NavBar />
       </div>
 
-    <div className="flex flex-col pt-[60px] h-full w-full ">
+      <div className="flex flex-col pt-[60px] h-full w-full ">
         <div className="flex flex-col items-center">
-          <img
-            src="/images/E_PIC3172.jpg"
-            alt="Background"
-            className="w-full h-100 object-cover"
-          />
-          <div className="inset-0 w-5/6 top-1/3 left-1/2 -translate-y-[150px] bg-white/50 backdrop-blur-md dark:bg-black/50 rounded-xl mb-[-75px]">
+          <div className="relative w-full h-100">
+            <Image
+              src="/images/E_PIC3172.jpg"
+              alt="Background"
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div className="inset-0 w-5/6 top-1/3 left-1/2 -translate-y-[150px] bg-white/50 backdrop-blur-md dark:bg-background/50 rounded-xl mb-[-75px]">
             <h1 className="text-4xl font-bold text-center font-montserrat font-extralight justify-center dark:text-white text-black place-self-center py-10">
               Was ist die Fachschaft?
             </h1>
@@ -30,12 +33,16 @@ export default function Info() {
         </div>
 
         <div className="flex flex-col items-center h-full">
-          <img
-            src="/images/a-sprawling-cityscape-constructed-from-e_1nhzD8gVQRW_TV_GcpGvGw_N1Jqc3oKT2SIc3T8TrzkUg.jpeg"
-            alt="Background"
-            className="w-full h-100 object-cover"
-          />
-          <div className="inset-0 w-5/6 top-1/3 left-1/2 -translate-y-[150px] bg-white/50 backdrop-blur-md dark:bg-black/50 rounded-xl mb-[-75px]">
+          <div className="relative w-full h-100">
+            <Image
+              src="/images/DSC_9020.jpg"
+              alt="Background"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="inset-0 w-5/6 top-1/3 left-1/2 -translate-y-[150px] bg-white/50 backdrop-blur-md dark:bg-background/50 rounded-xl mb-[-75px]">
             <h1 className="text-4xl font-bold text-center font-montserrat font-extralight justify-center dark:text-white text-black place-self-center py-10">
               Was machen wir?
             </h1>
@@ -60,17 +67,21 @@ export default function Info() {
         </div>
 
         <div className="flex flex-col items-center h-full">
-          <img
-            src="/images/E_PIC3185-2.jpg"
-            alt="Background"
-            className="w-full h-100 object-cover"
-          />
-          <div className="inset-0 w-5/6 top-1/3 left-1/2 -translate-y-[150px] bg-white/50 backdrop-blur-md dark:bg-black/50 rounded-xl">
+          <div className="relative w-full h-100">
+            <Image
+              src="/images/E_PIC3185-2.jpg"
+              alt="Background"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="inset-0 w-5/6 top-1/3 left-1/2 -translate-y-[150px] bg-white/50 backdrop-blur-md dark:bg-background/50 rounded-xl">
             <h1 className="text-4xl font-bold text-center font-montserrat font-extralight justify-center dark:text-white text-black place-self-center py-10">
               Wie kann ich mitmachen?
             </h1>
             <p className="text-md text-center font-montserrat font-light dark:text-white text-black px-10">
-              Du darfst jederzeit bei uns vorbeischauen (M 302). Jeden Mittwoch
+              Du darfst jederzeit bei uns vorbeischauen (M 305). Jeden Mittwoch
               ist der dritte Block (11:30 Uhr - 13:00 Uhr) extra für uns und
               unsere Untertanen freigehalten. In diesem Block finden unsere
               eigenen Fachschaftssitzungen statt. Möchtest du zudem bestens über
@@ -90,10 +101,6 @@ export default function Info() {
             </p>
           </div>
         </div>
-      </div>
-
-      <div>
-        <Footer />
       </div>
     </div>
   );

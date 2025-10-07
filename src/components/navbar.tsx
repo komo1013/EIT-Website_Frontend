@@ -139,7 +139,7 @@ export default function App() {
 
   const menuItems = [
     { label: "Wer sind wir?", href: "/about" },
-    { label: "Kontakt", href: "/kontakt" },
+    { label: "Team", href: "/team" },
   ];
 
   return (
