@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Form, Checkbox, Button, Input } from "@heroui/react";
 import Logo from "@/logos/fs-eit-logo.svg";
-import NavBar from "@/components/navbar_radix";
+// Update the import path to match the actual file name and extension, e.g.:
+import NavBar from "@/components/navbar"; // or "@/components/navbar_radix.tsx" if that's the correct file
 
 function verifyUser(username: string, password: string) {
   // This uses the raumzeit API to verify user credentials
