@@ -30,10 +30,15 @@ export default function TeamPage() {
       mail: "it@eit-hka.de",
     },
     {
-      name: "Mohamed Kondi",
+      name: "Mohamed Kordi",
       role: "IT Admin",
       mail: "it@eit-hka.de",
     },
+    {
+      name: "Janis Bernhauer",
+      role: "Event team",
+      mail: "event@eit-hka.de"
+    }
   ];
 
   return (
