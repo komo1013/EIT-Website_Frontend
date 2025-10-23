@@ -8,17 +8,22 @@ export default function Homepage() {
     <div className="min-h-screen flex flex-col">
       <NavBar />
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <div className="w-full max-w-8xl flex items-center justify-center">
-          <Image
-            src="/images/20250625-DSC00953-Enhanced-NR.jpg"
-            alt="EIT Logo"
-            className="object-contain w-full h-auto max-h-[80vh]"
-            isBlurred
-          />
+        <div className="w-full max-w-8xl flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8">
+          {/* Text - appears first on mobile (top), second on desktop (right) */}
+          <h1 className="font-melodrama text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold text-center lg:text-left px-4 order-1 lg:order-2">
+            Fachschaft EIT der HKA
+          </h1>
+          
+          {/* Image - appears second on mobile (bottom), first on desktop (left) */}
+          <div className="w-full lg:w-auto flex items-center justify-center order-2 lg:order-1">
+            <Image
+              src="/images/20250625-DSC00953-Enhanced-NR.jpg"
+              alt="EIT Logo"
+              className="object-contain w-full h-auto max-h-[50vh] lg:max-h-[80vh] max-w-full lg:max-w-3xl"
+              isBlurred
+            />
+          </div>
         </div>
-        <h1 className="font-melodrama text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold text-center mt-6 sm:mt-8 md:mt-10 lg:mt-12 xl:mt-14 2xl:mt-16 px-4">
-          Fachschaft EIT der HKA
-        </h1>
       </div>
     </div>
   );
