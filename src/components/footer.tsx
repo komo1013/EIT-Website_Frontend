@@ -1,19 +1,19 @@
 export default function Footer() {
   return (
     <div>
-      <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-auto w-full border-t-1 h-[275px]">
-        <div className="flex flex-col items-center py-10">
-          <h1 className="text-3xl font-bold text-center font-montserrat font-extralight justify-center  place-self-center mb-5 align-top">
+      <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-auto w-full border-t-1 py-8 md:py-10">
+        <div className="flex flex-col items-center py-4 md:py-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-center font-montserrat font-extralight justify-center  place-self-center mb-3 md:mb-5 align-top">
             Anschrift
           </h1>
 
-          <hr className="mb-5 mt-0 w-2/5" />
+          <hr className="mb-3 md:mb-5 mt-0 w-2/5" />
 
-          <p className="text-md text-center font-montserrat font-light  px-10">
+          <p className="text-sm md:text-md text-center font-montserrat font-light  px-6 md:px-10">
             M 305
           </p>
 
-          <p className="text-md text-center font-montserrat font-light  px-10">
+          <p className="text-sm md:text-md text-center font-montserrat font-light  px-6 md:px-10">
             Fachschaft EIT an der HKA
             <br />
             Moltkestraße 30
@@ -22,33 +22,33 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className="flex flex-col items-center py-10">
-          <h1 className="text-3xl font-bold text-center font-montserrat font-extralight justify-center  place-self-center mb-5 align-top">
+        <div className="flex flex-col items-center py-4 md:py-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-center font-montserrat font-extralight justify-center  place-self-center mb-3 md:mb-5 align-top">
             Standort
           </h1>
 
-          <hr className="mb-5 mt-0 w-2/5" />
+          <hr className="mb-3 md:mb-5 mt-0 w-2/5" />
 
-          <div className="w-2/3">
+          <div className="w-full max-w-xs h-48 md:h-56 px-6 md:px-10">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2616.709776080835!2d8.38727227627961!3d49.01610618959472!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479707d5af61b925%3A0xa25573cf5d79697!2sFachschaft%20EIT%20an%20der%20HKA!5e0!3m2!1sen!2sde!4v1759427273423!5m2!1sen!2sde"
-              className="w-full h-full border-0"
+              className="w-full h-full border-0 rounded-lg"
               loading="lazy"
             ></iframe>
           </div>
         </div>
 
-        <div className="flex flex-col items-center py-10">
-          <h1 className="text-3xl font-bold text-center font-montserrat font-extralight justify-center place-self-center mb-5 align-top">
+        <div className="flex flex-col items-center py-4 md:py-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-center font-montserrat font-extralight justify-center place-self-center mb-3 md:mb-5 align-top">
             Social Networks
           </h1>
 
-          <hr className="mb-5 mt-0 w-2/5" />
+          <hr className="mb-3 md:mb-5 mt-0 w-2/5" />
 
-          <div className="flex flex-col items-start w-5/6 lg:w-4/6 px-10">
+          <div className="flex flex-col items-start w-5/6 lg:w-4/6 px-6 md:px-10">
             <a
               href="https://www.instagram.com/fachschaft_eit_hka/"
-              className="flex items-center gap-2 text-md font-montserrat font-light  mb-2"
+              className="flex items-center gap-2 text-sm md:text-md font-montserrat font-light  mb-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -65,7 +65,7 @@ export default function Footer() {
 
             <a
               href="https://www.instagram.com/hka_elektro/"
-              className="flex items-center gap-2 text-md font-montserrat font-light  mb-2"
+              className="flex items-center gap-2 text-sm md:text-md font-montserrat font-light  mb-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -82,7 +82,7 @@ export default function Footer() {
 
             <a
               href="https://www.instagram.com/asta_hka/"
-              className="flex items-center gap-2 text-md font-montserrat font-light "
+              className="flex items-center gap-2 text-sm md:text-md font-montserrat font-light "
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -99,17 +99,17 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center py-10">
-          <h1 className="text-3xl font-bold text-center font-montserrat font-extralight justify-center place-self-center mb-5 align-top">
+        <div className="flex flex-col items-center py-4 md:py-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-center font-montserrat font-extralight justify-center place-self-center mb-3 md:mb-5 align-top">
             Kontakt
           </h1>
 
-          <hr className="mb-5 mt-0 w-2/5" />
+          <hr className="mb-3 md:mb-5 mt-0 w-2/5" />
           
-          <div className="flex flex-col items-start w-5/6 lg:w-4/6 px-10">
+          <div className="flex flex-col items-start w-5/6 lg:w-4/6 px-6 md:px-10">
             <a
               href="mailto:fachschaft@eit-hka.de"
-              className="flex items-center gap-2 text-md font-montserrat font-light  mb-2"
+              className="flex items-center gap-2 text-sm md:text-md font-montserrat font-light  mb-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -125,7 +125,7 @@ export default function Footer() {
 
             <a
               href="tel:+497219251448"
-              className="flex items-center gap-2 text-md font-montserrat font-light  mb-2"
+              className="flex items-center gap-2 text-sm md:text-md font-montserrat font-light  mb-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -67,23 +67,23 @@ function AccDropdownLoggedOut() {
         className="bg-white dark:bg-black bg-opacity-40 backdrop-blur-full"
       >
         <DropdownTrigger>
-          <Avatar as="button" className="transition" />
+          <Avatar as="button" className="transition w-8 h-8" size="sm" />
         </DropdownTrigger>
         <DropdownMenu>
-          {/* <DropdownItem key={"register"}>
-            <Link href="https://cloud.eit-hka.de" passHref>
-              <p className="text-md">Nextcloud</p>
+          <DropdownItem key="login">
+            <Link href="/accounts" className="w-full">
+              <p className="text-md font-montserrat">Login</p>
             </Link>
           </DropdownItem>
-          <DropdownItem key={"register"}>
-            <Link href="/#" passHref>
-              <p className="text-md">Register</p>
+          <DropdownItem key="nextcloud">
+            <Link href="https://cloud.eit-hka.de" target="_blank" rel="noopener noreferrer" className="w-full">
+              <p className="text-md font-montserrat">Nextcloud</p>
             </Link>
-          </DropdownItem> */}
+          </DropdownItem>
           <DropdownItem
             key="theme"
             className="cursor-default"
-            startContent={<p className="text-md">Dark mode</p>}
+            startContent={<p className="text-md font-montserrat">Dark mode</p>}
           >
             <Switch
               size="md"
