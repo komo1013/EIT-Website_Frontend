@@ -1,36 +1,55 @@
 "use client";
 
 import React, { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { Input, Button, Card, CardBody, CardHeader } from "@heroui/react";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Registration
+  const [username, setUsername] = useState(""); // Common username state
+  const [email, setEmail] = useState("");       // Email state for registration
+  const [password, setPassword] = useState(""); // Common password state
+  const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login } = useAuth(); // Get login function from auth context
+  const router = useRouter(); // For navigation after successful login
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
-    if (isLogin) {
-      if (!username || !password) {
-        setError("Please fill in all fields");
-        return;
+    try {
+      if (isLogin) {
+        if (!username || !password) {
+          setError("Please fill in all fields");
+          return;
+        }
+        // TODO: call your login API here
+        console.log("Login attempt:", { username, password });
+        
+        // After successful login (when you integrate real API):
+        login(username); // Set global auth state
+        router.push("/profile"); // Redirect to profile page
+      } else {
+        if (!username || !email || !password) {
+          setError("Please fill in all fields");
+          return;
+        }
+        // TODO: call your registration API here
+        console.log("Registration attempt:", { username, email, password });
+        setIsLogin(true);
+        setUsername("");
+        setEmail("");
+        setPassword("");
       }
-      // TODO: call your login API here
-      console.log("Login attempt:", { username, password });
-    } else {
-      if (!username || !email || !password) {
-        setError("Please fill in all fields");
-        return;
-      }
-      // TODO: call your registration API here
-      console.log("Registration attempt:", { username, email, password });
-      setIsLogin(true);
-      setUsername("");
-      setEmail("");
-      setPassword("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -43,152 +62,135 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>{isLogin ? "Login" : "Register"}</h2>
+    <Card className="w-full max-w-md mx-auto">
+      {/* Card Header with Title and Description */}
+      <CardHeader className="flex flex-col gap-1 px-6 pt-6">
+        <h2 className="text-2xl font-bold font-montserrat">
+          {isLogin ? "Login" : "Register"}
+        </h2>
+        <p className="text-sm text-default-500 font-montserrat">
+          {isLogin ? "Sign in to your EIT account" : "Create a new EIT account"}
+        </p>
+      </CardHeader>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.formGroup}>
-            <label htmlFor="username" style={styles.label}>
-              Username
-            </label>
-            <input
-              id="username"
-              type="text"
+      {/* Card Body with Form */}
+      <CardBody className="px-6 pb-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Username Input */}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-center text-sm font-montserrat">
+              {isLogin ? "User ID" : "Username"}
+            </p>
+            <Input
+              placeholder={isLogin ? "Enter your user ID" : "Choose a username"}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              style={styles.input}
-              required
+              isRequired
+              variant="bordered"
+              classNames={{
+                label: "font-montserrat",
+                input: "font-montserrat text-center focus:outline-none",
+                inputWrapper:
+                  "border-none rounded-2xl bg-[rgba(50,50,50,0.9)] w-full focus-within:outline-none transition-all duration-300 focus-within:shadow-[0_0_15px_rgba(99,102,241,0.6)] focus-within:ring-2 focus-within:ring-blue-500/50",
+              }}
             />
           </div>
 
+          {/* Email Input (only for registration) */}
           {!isLogin && (
-            <div style={styles.formGroup}>
-              <label htmlFor="email" style={styles.label}>
-                Email
-              </label>
-              <input
-                id="email"
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-center text-sm font-montserrat">Email</p>
+              <Input
                 type="email"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={styles.input}
-                required
+                isRequired
+                variant="bordered"
+                classNames={{
+                  label: "font-montserrat",
+                  input: "font-montserrat text-center focus:outline-none",
+                  inputWrapper:
+                    "border-none rounded-2xl bg-[rgba(50,50,50,0.9)] w-full focus-within:outline-none transition-all duration-300 focus-within:shadow-[0_0_15px_rgba(34,197,94,0.6)] focus-within:ring-2 focus-within:ring-green-500/50",
+                }}
               />
             </div>
           )}
 
-          <div style={styles.formGroup}>
-            <label htmlFor="password" style={styles.label}>
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              required
-            />
+          {/* Password Input */}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-center text-sm font-montserrat">Password</p>
+            <div className="relative w-full">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="        Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                isRequired
+                variant="bordered"
+                classNames={{
+                  label: "font-montserrat",
+                  input: "font-montserrat text-center focus:outline-none",
+                  inputWrapper:
+                    "border-none rounded-2xl bg-[rgba(50,50,50,0.9)] w-full focus-within:outline-none pr-12 transition-all duration-300 focus-within:shadow-[0_0_15px_rgba(239,68,68,0.6)] focus-within:ring-2 focus-within:ring-red-500/50",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
-          {error && <p style={styles.error}>{error}</p>}
+          {/* Error Message Display */}
+          {error && (
+            <div className="px-4 py-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800">
+              <p className="text-sm text-danger-600 dark:text-danger-400 font-montserrat">
+                {error}
+              </p>
+            </div>
+          )}
 
-          <button type="submit" style={styles.submitButton}>
-            {isLogin ? "Login" : "Register"}
-          </button>
+          {/* Submit Button with Loading State */}
+          <Button
+            type="submit"
+            color="primary"
+            isLoading={isLoading}
+            className="w-full font-montserrat font-semibold"
+          >
+            {isLoading ? (isLogin ? "Signing in..." : "Creating account...") : (isLogin ? "Sign In" : "Register")}
+          </Button>
+
+          {/* Toggle Between Login and Registration */}
+          <div className="flex flex-col items-center gap-2 pt-4 border-t border-default-200">
+            <p className="text-sm text-default-500 font-montserrat">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}
+            </p>
+            <Button
+              type="button"
+              variant="light"
+              color="primary"
+              onClick={handleToggle}
+              className="font-montserrat text-sm"
+            >
+              {isLogin ? "Register here" : "Login here"}
+            </Button>
+          </div>
         </form>
-
-        <div style={styles.toggleContainer}>
-          <p style={styles.toggleText}>
-            {isLogin ? "Don't have an account?" : "Already have an account?"}
-          </p>
-          <button type="button" onClick={handleToggle} style={styles.toggleButton}>
-            {isLogin ? "Register here" : "Login here"}
-          </button>
-        </div>
-      </div>
-    </div>
+      </CardBody>
+    </Card>
   );
 }
-
-const styles: { [k: string]: React.CSSProperties } = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    backgroundColor: "#f5f5f5",
-    fontFamily: "Arial, sans-serif",
-  },
-  card: {
-    backgroundColor: "white",
-    padding: "40px",
-    borderRadius: "8px",
-    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-    width: "100%",
-    maxWidth: "400px",
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: "30px",
-    color: "#333",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  formGroup: {
-    marginBottom: "20px",
-  },
-  label: {
-    display: "block",
-    marginBottom: "5px",
-    color: "#555",
-    fontSize: "14px",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    fontSize: "14px",
-    border: "1px solid #ddd",
-    borderRadius: "4px",
-    boxSizing: "border-box",
-  },
-  error: {
-    color: "#d32f2f",
-    fontSize: "14px",
-    marginBottom: "15px",
-    textAlign: "center",
-  },
-  submitButton: {
-    backgroundColor: "#1976d2",
-    color: "white",
-    padding: "12px",
-    fontSize: "16px",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    marginTop: "10px",
-  },
-  toggleContainer: {
-    marginTop: "30px",
-    textAlign: "center",
-    borderTop: "1px solid #eee",
-    paddingTop: "20px",
-  },
-  toggleText: {
-    color: "#666",
-    fontSize: "14px",
-    marginBottom: "10px",
-  },
-  toggleButton: {
-    backgroundColor: "transparent",
-    color: "#1976d2",
-    border: "none",
-    fontSize: "14px",
-    cursor: "pointer",
-    textDecoration: "underline",
-    padding: "5px",
-  },
-};

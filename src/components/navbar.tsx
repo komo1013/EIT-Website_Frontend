@@ -140,7 +140,8 @@ export default function App() {
   const menuItems = [
     { label: "Wer sind wir?", href: "/about" },
     { label: "Team", href: "/team" },
-    { label: "Vorteile für Studenten", href: "/vorteile_studenten"}
+    { label: "Vorteile für Studenten", href: "/vorteile_studenten"},
+    { label: "Profil", href: "/profile" }
   ];
 
   return (
