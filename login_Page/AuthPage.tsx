@@ -26,6 +26,7 @@ export default function AuthPage() {
       if (isLogin) {
         if (!username || !password) {
           setError("Please fill in all fields");
+          setIsLoading(false);
           return;
         }
         // TODO: call your login API here
@@ -37,6 +38,7 @@ export default function AuthPage() {
       } else {
         if (!username || !email || !password) {
           setError("Please fill in all fields");
+          setIsLoading(false);
           return;
         }
         // TODO: call your registration API here
