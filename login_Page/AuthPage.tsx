@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Input, Button, Card, CardBody, CardHeader } from "@heroui/react";
 import { Toaster } from "@/components/components/ui/sonner";
+import { TermsPrivacy } from "@/components/components/terms-privacy";
+import { Info, Eye, EyeOff, Check } from "lucide-react";
 import clsx from "clsx";
 
 interface Particle {
@@ -14,12 +16,69 @@ interface Particle {
   age: number;
 }
 
+const backgroundColors = {
+  blue: {
+    via: "rgb(23, 37, 84)",
+    particle: "rgba(96, 165, 250, 0.2)",
+    grid: "rgba(59, 130, 246, 0.03)",
+    light: "#e0e7ff",
+    dark: "#1e293b"
+  },
+  orange: {
+    via: "rgb(67, 20, 7)",
+    particle: "rgba(251, 146, 60, 0.2)",
+    grid: "rgba(249, 115, 22, 0.03)",
+    light: "#ffe7d6",
+    dark: "#7c2d12"
+  },
+  green: {
+    via: "rgb(7, 67, 20)",
+    particle: "rgba(34, 197, 94, 0.2)",
+    grid: "rgba(22, 249, 115, 0.03)",
+    light: "#d1fae5",
+    dark: "#064e3b"
+  },
+  purple: {
+    via: "rgb(67, 7, 84)",
+    particle: "rgba(165, 96, 250, 0.2)",
+    grid: "rgba(130, 59, 246, 0.03)",
+    light: "#ede9fe",
+    dark: "#581c87"
+  },
+  pink: {
+    via: "rgb(131, 24, 67)",
+    particle: "rgba(244, 114, 182, 0.2)",
+    grid: "rgba(236, 72, 153, 0.03)",
+    light: "#fce7f3",
+    dark: "#831843"
+  },
+  teal: {
+    via: "rgb(13, 148, 136)",
+    particle: "rgba(45, 212, 191, 0.2)",
+    grid: "rgba(20, 184, 166, 0.03)",
+    light: "#ccfbf1",
+    dark: "#134e4a"
+  },
+  yellow: {
+    via: "rgb(202, 138, 4)",
+    particle: "rgba(253, 224, 71, 0.2)",
+    grid: "rgba(250, 204, 21, 0.03)",
+    light: "#fef9c3",
+    dark: "#713f12"
+  },
+};
+
+type ThemeKey = keyof typeof backgroundColors;
+
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showTerms, setShowTerms] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [generatedPassword, setGeneratedPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,21 +87,41 @@ export default function AuthPage() {
 
   const [isOn, setIsOn] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [currentTheme, setCurrentTheme] = useState<ThemeKey>("blue");
+  const [streamParticles, setStreamParticles] = useState<Particle[]>([]);
 
-  const backgroundColors = {
-    blue: { via: "rgb(23, 37, 84)", particle: "rgba(96, 165, 250, 0.2)", grid: "rgba(59, 130, 246, 0.03)" },
-    orange: { via: "rgb(67, 20, 7)", particle: "rgba(251, 146, 60, 0.2)", grid: "rgba(249, 115, 22, 0.03)" },
-  };
-
-  const currentBg = backgroundColors.blue;
+  const currentBg = backgroundColors[currentTheme];
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
+      
+      // Add new particle at cursor position
+      const newParticle: Particle = {
+        id: Date.now() + Math.random(),
+        x: e.clientX,
+        y: e.clientY,
+        age: 0,
+      };
+      
+      setStreamParticles(prev => [...prev, newParticle]);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  // Animate and clean up particles
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStreamParticles(prev => {
+        return prev
+          .map(p => ({ ...p, age: p.age + 1 }))
+          .filter(p => p.age < 30);
+      });
+    }, 50);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,17 +143,22 @@ export default function AuthPage() {
         login(username);
         router.push("/profile");
       } else {
-        if (!username || !email || !password) {
-          setError("Please fill in all fields");
+        if (!username || !generatedPassword) {
+          setError("Please fill in all required fields");
+          setIsLoading(false);
+          return;
+        }
+        if (!isPasswordStrong(generatedPassword)) {
+          setError("Password must be at least 8 characters with uppercase, lowercase, and a special character");
           setIsLoading(false);
           return;
         }
         // TODO: call your registration API here
-        console.log("Registration attempt:", { username, email, password });
+        console.log("Registration attempt:", { username, email, generatedPassword });
         setIsLogin(true);
         setUsername("");
         setEmail("");
-        setPassword("");
+        setGeneratedPassword("");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -91,20 +175,51 @@ export default function AuthPage() {
     setPassword("");
   };
 
+  const handleRegisterClick = () => {
+    setShowTerms(true);
+  };
+
+  const handleTermsAgree = () => {
+    setShowTerms(false);
+    setIsLogin(false);
+  };
+
+  const handleTermsBack = () => {
+    setShowTerms(false);
+    setIsLogin(true);
+  };
+
+  const isPasswordStrong = (pwd: string): boolean => {
+    const hasUppercase = /[A-Z]/.test(pwd);
+    const hasLowercase = /[a-z]/.test(pwd);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};:'"\\|,.<>\/?]/.test(pwd);
+    const isLengthValid = pwd.length >= 8;
+    return hasUppercase && hasLowercase && hasSpecialChar && isLengthValid;
+  };
+
+  const isRegisterButtonDisabled = !isLogin && (!username || !generatedPassword || !isPasswordStrong(generatedPassword));
+  const isLoginButtonDisabled = isLogin && (!username || !password);
+
+  if (showTerms) {
+    return <TermsPrivacy onAgree={handleTermsAgree} onBack={handleTermsBack} />;
+  }
+
   return (
     <div
       className="min-h-screen relative transition-colors duration-700"
       style={{
-        background: isOn
+        backgroundImage: isOn
           ? `linear-gradient(to bottom, rgb(248, 250, 252), ${currentBg.via.replace("rgb", "rgba").replace(")", ", 0.1)")}, rgb(241, 245, 249))`
           : `linear-gradient(135deg, rgb(15, 23, 42), rgb(2, 6, 23), ${currentBg.via})`,
         backgroundSize: "cover",
+        backgroundColor: currentBg.via,
+        height: "100vh",
       }}
     >
       <div
         className="fixed inset-0 pointer-events-none opacity-30"
         style={{
-          background: isOn
+          backgroundImage: isOn
             ? "radial-gradient(circle at 30% 50%, rgba(200, 200, 220, 0.4), transparent 60%), radial-gradient(circle at 70% 50%, rgba(180, 180, 200, 0.3), transparent 60%)"
             : "radial-gradient(circle at 30% 50%, rgba(100, 110, 130, 0.15), transparent 50%), radial-gradient(circle at 70% 50%, rgba(80, 90, 110, 0.12), transparent 50%)",
           backgroundSize: "200% 200%",
@@ -115,15 +230,82 @@ export default function AuthPage() {
       <div
         className="fixed inset-0 pointer-events-none z-30 transition-opacity duration-200"
         style={{
-          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, ${currentBg.particle.replace("0.2", "0.18")}, transparent 40%)`,
+          backgroundImage: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, ${currentBg.particle.replace("0.2", "0.18")}, transparent 40%)`,
+        }}
+      />
+
+      {/* Electric Stream Following Cursor */}
+      {streamParticles.map((particle) => {
+        const opacity = Math.max(0, 1 - particle.age / 30);
+        const size = 2 + particle.age / 15;
+        const blur = particle.age / 10;
+        
+        return (
+          <div
+            key={particle.id}
+            className="fixed pointer-events-none z-40"
+            style={{
+              left: particle.x - size / 2,
+              top: particle.y - size / 2,
+              width: size,
+              height: size,
+              opacity,
+            }}
+          >
+            <div
+              className="w-full h-full rounded-full"
+              style={{
+                background: currentBg.particle.replace("0.2", "1"),
+                boxShadow: `0 0 ${8 + blur * 2}px ${currentBg.particle.replace("0.2", "0.8")}, 0 0 ${16 + blur * 4}px ${currentBg.particle.replace("0.2", "0.4")}`,
+                filter: `blur(${blur * 0.5}px)`,
+              }}
+            />
+            
+            {/* Electric arc effect */}
+            {particle.age < 10 && particle.age % 3 === 0 && (
+              <div 
+                className="absolute top-0 left-1/2 w-0.5 rounded-full"
+                style={{
+                  height: `${Math.random() * 8 + 4}px`,
+                  background: `linear-gradient(to bottom, ${currentBg.particle.replace("0.2", "0.9")}, transparent)`,
+                  transform: `translateX(-50%) rotate(${Math.random() * 360}deg)`,
+                  transformOrigin: "top",
+                  boxShadow: `0 0 4px ${currentBg.particle.replace("0.2", "0.8")}`,
+                }}
+              />
+            )}
+          </div>
+        );
+      })}
+
+      <div
+        className="fixed inset-0 pointer-events-none z-30 transition-opacity duration-200"
+        style={{
+          backgroundImage: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, ${currentBg.particle.replace("0.2", "0.18")}, transparent 40%)`,
         }}
       />
 
       <div className="absolute inset-0 bg-[size:50px_50px]" style={{ backgroundImage: `linear-gradient(${currentBg.grid} 1px, transparent 1px), linear-gradient(90deg, ${currentBg.grid} 1px, transparent 1px)` }} />
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
+        {/* Theme Selector */}
+        <div className="flex gap-4 mb-6">
+          {Object.keys(backgroundColors).map((theme) => (
+            <button
+              key={theme}
+              onClick={() => setCurrentTheme(theme as ThemeKey)}
+              className={clsx(
+                "w-8 h-8 rounded-full border-2",
+                currentTheme === theme ? "border-white" : "border-transparent"
+              )}
+              style={{ backgroundColor: backgroundColors[theme as ThemeKey].via }}
+              aria-label={`Switch to ${theme} theme`}
+            />
+          ))}
+        </div>
+
         {/* Existing Login Form */}
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-md mx-auto bg-slate-950/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-2xl shadow-blue-500/10">
           {/* Card Header with Title and Description */}
           <CardHeader className="flex flex-col gap-1 px-6 pt-6">
             <h2 className="text-2xl font-bold font-montserrat">
@@ -140,10 +322,10 @@ export default function AuthPage() {
               {/* Username Input */}
               <div className="flex flex-col items-center gap-2">
                 <p className="text-center text-sm font-montserrat">
-                  {isLogin ? "User ID" : "Username"}
+                  {isLogin ? "User ID" : <span>RZ Username <span className="text-red-500">*</span></span>}
                 </p>
                 <Input
-                  placeholder={isLogin ? "Enter your user ID" : "Choose a username"}
+                  placeholder={isLogin ? "Enter your user ID" : "Enter RZ Username"}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   isRequired
@@ -160,13 +342,20 @@ export default function AuthPage() {
               {/* Email Input (only for registration) */}
               {!isLogin && (
                 <div className="flex flex-col items-center gap-2">
-                  <p className="text-center text-sm font-montserrat">Email</p>
+                  <div className="flex items-center gap-1 justify-center">
+                    <p className="text-center text-sm font-montserrat">Email</p>
+                    <div className="group relative">
+                      <Info className="w-4 h-4 text-gray-400 hover:text-gray-200 cursor-help" />
+                      <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gray-800 text-white text-xs rounded p-2 z-50">
+                        You can choose to register with your University or Private Mail or none at all and add it later in the options
+                      </div>
+                    </div>
+                  </div>
                   <Input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Enter your email (optional)"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    isRequired
                     variant="bordered"
                     classNames={{
                       label: "font-montserrat",
@@ -178,13 +367,15 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {/* Password Input */}
+              {/* Password / RS Password Input */}
               <div className="flex flex-col items-center gap-2">
-                <p className="text-center text-sm font-montserrat">Password</p>
+                <p className="text-center text-sm font-montserrat">
+                  {isLogin ? "Password" : <span>RS Password <span className="text-red-500">*</span></span>}
+                </p>
                 <div className="relative w-full">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="        Enter your password"
+                    placeholder={isLogin ? "Enter your password" : "Enter RS Password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     isRequired
@@ -202,19 +393,63 @@ export default function AuthPage() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                      </svg>
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
+
+              {/* Generate Password Field (only for registration) */}
+              {!isLogin && (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-1 justify-center">
+                    <p className="text-center text-sm font-montserrat">Generate Password <span className="text-red-500">*</span></p>
+                    <div className="group relative">
+                      <Info className="w-4 h-4 text-gray-400 hover:text-gray-200 cursor-help" />
+                      <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-800 text-white text-xs rounded p-2 z-50">
+                        <div className="font-semibold mb-1">Password must contain:</div>
+                        <ul className="space-y-0.5">
+                          <li className={`flex items-center gap-1 ${generatedPassword.match(/[A-Z]/) ? 'text-green-400' : 'text-gray-400'}`}>
+                            <Check className="w-3 h-3" /> Uppercase letter
+                          </li>
+                          <li className={`flex items-center gap-1 ${generatedPassword.match(/[a-z]/) ? 'text-green-400' : 'text-gray-400'}`}>
+                            <Check className="w-3 h-3" /> Lowercase letter
+                          </li>
+                          <li className={`flex items-center gap-1 ${generatedPassword.match(/[!@#$%^&*(),.?":{}|<>]/) ? 'text-green-400' : 'text-gray-400'}`}>
+                            <Check className="w-3 h-3" /> Special character
+                          </li>
+                          <li className={`flex items-center gap-1 ${generatedPassword.length >= 8 ? 'text-green-400' : 'text-gray-400'}`}>
+                            <Check className="w-3 h-3" /> 8+ characters
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative w-full">
+                    <Input
+                      type={showGeneratedPassword ? "text" : "password"}
+                      placeholder="Enter your generated password"
+                      value={generatedPassword}
+                      onChange={(e) => setGeneratedPassword(e.target.value)}
+                      isRequired
+                      variant="bordered"
+                      classNames={{
+                        label: "font-montserrat",
+                        input: "font-montserrat text-center focus:outline-none",
+                        inputWrapper:
+                          "border-none rounded-2xl bg-[rgba(50,50,50,0.9)] w-full focus-within:outline-none pr-12 transition-all duration-300 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.6)] focus-within:ring-2 focus-within:ring-purple-500/50",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGeneratedPassword((s) => !s)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
+                      aria-label={showGeneratedPassword ? "Hide password" : "Show password"}
+                    >
+                      {showGeneratedPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Error Message Display */}
               {error && (
@@ -230,6 +465,7 @@ export default function AuthPage() {
                 type="submit"
                 color="primary"
                 isLoading={isLoading}
+                isDisabled={isLogin ? isLoginButtonDisabled : isRegisterButtonDisabled}
                 className="w-full font-montserrat font-semibold"
               >
                 {isLoading ? (isLogin ? "Signing in..." : "Creating account...") : (isLogin ? "Sign In" : "Register")}
@@ -244,7 +480,7 @@ export default function AuthPage() {
                   type="button"
                   variant="light"
                   color="primary"
-                  onClick={handleToggle}
+                  onClick={isLogin ? handleRegisterClick : handleToggle}
                   className="font-montserrat text-sm"
                 >
                   {isLogin ? "Register here" : "Login here"}
