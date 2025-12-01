@@ -4,6 +4,7 @@ import { HeroUIProvider } from "@heroui/react";
 import { ThemeProvider as NextThemesProvider, type Attribute } from "next-themes";
 import { useRouter } from "next/navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider as ColorThemeProvider } from "@/contexts/ThemeContext";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -26,7 +27,9 @@ export function Providers({ children, themeProps }: ProvidersProps) {
     >
       <HeroUIProvider>
         <AuthProvider>
-          {children}
+          <ColorThemeProvider>
+            {children}
+          </ColorThemeProvider>
         </AuthProvider>
       </HeroUIProvider>
     </NextThemesProvider>

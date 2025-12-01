@@ -8,6 +8,8 @@ import { Toaster } from "@/components/components/ui/sonner";
 import { TermsPrivacy } from "@/components/components/terms-privacy";
 import { Info, Eye, EyeOff, Check } from "lucide-react";
 import clsx from "clsx";
+import { login as apiLogin } from "@/lib/api";
+import ElectricBorder from "@/components/ElectricBorder";
 
 interface Particle {
   id: number;
@@ -136,12 +138,23 @@ export default function AuthPage() {
           setIsLoading(false);
           return;
         }
-        // TODO: call your login API here
-        console.log("Login attempt:", { username, password });
-
-        // After successful login (when you integrate real API):
-        login(username);
-        router.push("/profile");
+        
+        // Call the real EIT API via our proxy
+        try {
+          const response = await apiLogin({ 
+            userid: username, 
+            password: password 
+          });
+          
+          // If login succeeds, set the auth state and redirect
+          login(username);
+          router.push("/profile");
+        } catch (apiError) {
+          // Handle API errors (wrong credentials, server error, etc.)
+          setError(apiError instanceof Error ? apiError.message : "Login failed. Please check your credentials.");
+          setIsLoading(false);
+          return;
+        }
       } else {
         if (!username || !generatedPassword) {
           setError("Please fill in all required fields");
@@ -288,24 +301,16 @@ export default function AuthPage() {
       <div className="absolute inset-0 bg-[size:50px_50px]" style={{ backgroundImage: `linear-gradient(${currentBg.grid} 1px, transparent 1px), linear-gradient(90deg, ${currentBg.grid} 1px, transparent 1px)` }} />
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
-        {/* Theme Selector */}
-        <div className="flex gap-4 mb-6">
-          {Object.keys(backgroundColors).map((theme) => (
-            <button
-              key={theme}
-              onClick={() => setCurrentTheme(theme as ThemeKey)}
-              className={clsx(
-                "w-8 h-8 rounded-full border-2",
-                currentTheme === theme ? "border-white" : "border-transparent"
-              )}
-              style={{ backgroundColor: backgroundColors[theme as ThemeKey].via }}
-              aria-label={`Switch to ${theme} theme`}
-            />
-          ))}
-        </div>
-
         {/* Existing Login Form */}
-        <Card className="w-full max-w-md mx-auto bg-slate-950/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-2xl shadow-blue-500/10">
+        <ElectricBorder
+          color={currentBg.particle.replace("0.2", "1")}
+          speed={1}
+          chaos={0.8}
+          thickness={2}
+          className=""
+          style={{ borderRadius: 24 }}
+        >
+          <Card className="w-full max-w-md mx-auto bg-slate-950/40 backdrop-blur-xl border-0 rounded-3xl shadow-2xl shadow-blue-500/10">
           {/* Card Header with Title and Description */}
           <CardHeader className="flex flex-col gap-1 px-6 pt-6">
             <h2 className="text-2xl font-bold font-montserrat">
@@ -489,6 +494,7 @@ export default function AuthPage() {
             </form>
           </CardBody>
         </Card>
+        </ElectricBorder>
       </div>
 
       <Toaster position="top-right" richColors />

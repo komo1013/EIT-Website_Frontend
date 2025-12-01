@@ -1,10 +1,18 @@
 "use client";
 import NavBar from "@/components/navbar";
 import Image from "next/image";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 export default function Info() {
+  const { currentBg } = useThemeContext();
+  
   return (
-    <div>
+    <div 
+      className="transition-colors duration-700"
+      style={{
+        background: `linear-gradient(135deg, ${currentBg.dark}, ${currentBg.darker}, ${currentBg.via})`,
+      }}
+    >
       <div>
         <NavBar />
       </div>

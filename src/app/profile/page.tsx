@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useThemeContext } from "@/contexts/ThemeContext";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/navbar";
 import { ProfileCard, ColorTheme, StudentProfile } from '@/components/components/profile-card';
@@ -236,10 +237,10 @@ function MiniCalendar({
 
 export default function ProfilePage() {
   const { isLoggedIn, username, logout } = useAuth();
+  const { colorTheme, setColorTheme, currentBg } = useThemeContext();
   const router = useRouter();
   
   const [isOn, setIsOn] = useState(false);
-  const [colorTheme, setColorTheme] = useState<ColorTheme | undefined>(undefined);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [streamParticles, setStreamParticles] = useState<StreamParticle[]>([]);
   
@@ -382,20 +383,6 @@ export default function ProfilePage() {
     githubUrl: 'https://github.com',
   };
 
-  const backgroundColors: Record<ColorTheme, { via: string; particle: string; grid: string }> = {
-    blue: { via: 'rgb(23, 37, 84)', particle: 'rgba(96, 165, 250, 0.2)', grid: 'rgba(59, 130, 246, 0.03)' },
-    orange: { via: 'rgb(67, 20, 7)', particle: 'rgba(251, 146, 60, 0.2)', grid: 'rgba(249, 115, 22, 0.03)' },
-    green: { via: 'rgb(6, 46, 37)', particle: 'rgba(74, 222, 128, 0.2)', grid: 'rgba(34, 197, 94, 0.03)' },
-    red: { via: 'rgb(69, 10, 10)', particle: 'rgba(248, 113, 113, 0.2)', grid: 'rgba(239, 68, 68, 0.03)' },
-    purple: { via: 'rgb(46, 16, 101)', particle: 'rgba(192, 132, 252, 0.2)', grid: 'rgba(168, 85, 247, 0.03)' },
-    gold: { via: 'rgb(66, 53, 3)', particle: 'rgba(250, 204, 21, 0.2)', grid: 'rgba(234, 179, 8, 0.03)' },
-  };
-
-  // Bestimme die aktuelle Farbe basierend auf colorTheme oder Level
-  const levelColors: ColorTheme[] = ['blue', 'green', 'orange', 'purple', 'red', 'gold'];
-  const effectiveColorTheme = colorTheme || levelColors[studentProfile.level - 1];
-  const currentBg = backgroundColors[effectiveColorTheme];
-
   return (
     <>
       <NavBar />
@@ -404,7 +391,7 @@ export default function ProfilePage() {
         style={{
           background: isOn 
             ? `linear-gradient(to bottom, rgb(248, 250, 252), ${currentBg.via.replace('rgb', 'rgba').replace(')', ', 0.1)')}, rgb(241, 245, 249))`
-            : `linear-gradient(135deg, rgb(15, 23, 42), rgb(2, 6, 23), ${currentBg.via})`,
+            : `linear-gradient(135deg, ${currentBg.dark}, ${currentBg.darker}, ${currentBg.via})`,
         }}
       >
         {/* Metallic Background Overlay */}
@@ -505,7 +492,7 @@ export default function ProfilePage() {
           
           {/* Color Picker - für Demo/Vorschau */}
           <ColorPicker 
-            selectedColor={effectiveColorTheme} 
+            selectedColor={colorTheme} 
             onColorChange={setColorTheme} 
           />
         </div>
@@ -553,12 +540,12 @@ export default function ProfilePage() {
                 {/* Project Section - nur anzeigen wenn sichtbar ODER User ist Owner/Participant */}
                 {(projectsVisible || projectData.ownerId === currentUserId || projectData.participants.some((p: { id: string }) => p.id === currentUserId)) && (
                   <ProjectSection 
-                    colorTheme={effectiveColorTheme}
                     projectData={projectData}
                     onProjectUpdate={setProjectData}
                     currentUserId={currentUserId}
                     isVisible={projectsVisible}
                     onVisibilityToggle={() => setProjectsVisible(!projectsVisible)}
+                    colorTheme={colorTheme}
                   />
                 )}
               </div>
@@ -572,7 +559,7 @@ export default function ProfilePage() {
                 {/* Study Checklist - nur anzeigen wenn sichtbar ODER User ist Owner */}
                 {(studyVisible || isOwner) && (
                   <StudyChecklist 
-                    colorTheme={effectiveColorTheme}
+                    colorTheme={colorTheme}
                     milestones={studyMilestones}
                     onMilestoneToggle={handleMilestoneToggle}
                     isOwner={isOwner}
@@ -584,7 +571,7 @@ export default function ProfilePage() {
                 {/* Semester Progress - nur anzeigen wenn sichtbar ODER User ist Owner */}
                 {(semesterVisible || isOwner) && (
                   <SemesterProgress 
-                    colorTheme={effectiveColorTheme}
+                    colorTheme={colorTheme}
                     semesterData={semesterData}
                     onSemesterUpdate={setSemesterData}
                     isOwner={isOwner}

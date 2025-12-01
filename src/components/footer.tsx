@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <div>
+    <div className="bg-background/20 backdrop-blur-sm">
       <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-auto w-full border-t-1 py-8 md:py-10">
         <div className="flex flex-col items-center py-4 md:py-6">
           <h1 className="text-2xl md:text-3xl font-bold text-center font-montserrat font-extralight justify-center  place-self-center mb-3 md:mb-5 align-top">
@@ -10,7 +10,7 @@ export default function Footer() {
           <hr className="mb-3 md:mb-5 mt-0 w-2/5" />
 
           <p className="text-sm md:text-md text-center font-montserrat font-light  px-6 md:px-10">
-            M 305
+             Gebäude M 305
           </p>
 
           <p className="text-sm md:text-md text-center font-montserrat font-light  px-6 md:px-10">

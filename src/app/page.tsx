@@ -2,10 +2,18 @@
 import React from "react";
 import NavBar from "@/components/navbar";
 import { Image } from "@heroui/react";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 export default function Homepage() {
+  const { currentBg } = useThemeContext();
+  
   return (
-    <div className="min-h-screen flex flex-col">
+    <div 
+      className="min-h-screen flex flex-col transition-colors duration-700"
+      style={{
+        background: `linear-gradient(135deg, ${currentBg.dark}, ${currentBg.darker}, ${currentBg.via})`,
+      }}
+    >
       <NavBar />
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
         <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12">
