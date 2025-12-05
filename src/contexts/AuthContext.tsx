@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { logout as apiLogout } from "@/lib/api";
 
 // Define the shape of our auth context
 interface AuthContextType {
@@ -50,11 +51,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("isLoggedIn", "true");
   };
 
-  const logout = () => {
-    setIsLoggedIn(false);
-    setUsername(null);
-    localStorage.removeItem("username");
-    localStorage.removeItem("isLoggedIn");
+  const logout = async () => {
+    try {
+      // Call the API to logout on the server
+      await apiLogout();
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+      // Continue with local logout even if API call fails
+    } finally {
+      // Always clear local state
+      setIsLoggedIn(false);
+      setUsername(null);
+      localStorage.removeItem("username");
+      localStorage.removeItem("isLoggedIn");
+    }
   };
 
   return (
