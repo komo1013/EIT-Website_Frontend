@@ -4,14 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/navbar";
-import { ProfileCard, ColorTheme, StudentProfile } from '@/components/components/profile-card';
+import { ProfileCard, ColorTheme, StudentProfile } from '@/components/profile/profile-card';
 import clsx from "clsx";
 import { Switch } from '@/components/components/ui/switch';
 import { ImageWithFallback } from '@/components/components/figma/ImageWithFallback';
-import { ColorPicker } from '@/components/components/color-picker';
-import { ProjectSection, ProjectData } from '@/components/components/project-section';
-import { StudyChecklist, StudyMilestone } from '@/components/components/study-checklist';
-import { SemesterProgress, SemesterData, Lab } from '@/components/components/semester-progress';
+import { ColorPicker } from '@/components/profile/color-picker';
+import { ProjectSection, ProjectData } from '@/components/profile/project-section';
+import { StudyChecklist, StudyMilestone } from '@/components/profile/study-checklist';
+import { SemesterProgress, SemesterData, Lab } from '@/components/profile/semester-progress';
 import { Toaster } from '@/components/components/ui/sonner';
 
 interface LabOnDay {
