@@ -155,9 +155,9 @@ graph TD
     DROPDOWN --> PROFILE_LINK[Profile Link]
     DROPDOWN --> LOGOUT[Logout Button]
     
-    PAGE --> ACCOUNTS_PAGE[/accounts - AuthPage]
-    PAGE --> PROFILE_PAGE[/profile - Profile Components]
-    PAGE --> HOME_PAGE[/ - Homepage]
+    PAGE --> ACCOUNTS_PAGE[/accounts]
+    PAGE --> PROFILE_PAGE[/profile]
+    PAGE --> HOME_PAGE[/]
     
     ACCOUNTS_PAGE --> LOGIN_FORM[Login Form]
     ACCOUNTS_PAGE --> REGISTER_FORM[Register Form]
