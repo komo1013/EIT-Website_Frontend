@@ -1,3 +1,4 @@
+// Fertige Seite mit Informationen über die Fachschaft
 "use client";
 import NavBar from "@/components/navbar";
 import Image from "next/image";

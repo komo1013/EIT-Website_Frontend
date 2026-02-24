@@ -1,8 +1,9 @@
+//fast fertige Seite mit Profilinformationen, Projekten, Checklisten und Kalender - alles in einem modernen Design mit vielen Effekten. Noch nicht final.
+
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
-import { useRouter } from "next/navigation";
 import NavBar from "@/components/navbar";
 import { ProfileCard, ColorTheme, StudentProfile } from '@/components/profile/profile-card';
 import clsx from "clsx";
@@ -236,9 +237,8 @@ function MiniCalendar({
 }
 
 export default function ProfilePage() {
-  const { isLoggedIn, username, logout } = useAuth();
+  const { isAuthenticated, user, logout ,login } = useAuth();
   const { colorTheme, setColorTheme, currentBg } = useThemeContext();
-  const router = useRouter();
   
   const [isOn, setIsOn] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -322,12 +322,12 @@ export default function ProfilePage() {
   ]);
   const [semesterVisible, setSemesterVisible] = useState(true);
 
-  // Redirect to login if not authenticated
+  // Redirect to Authentik login if not authenticated
   useEffect(() => {
-    if (!isLoggedIn) {
-      router.push("/accounts");
+    if (!isAuthenticated) {
+      login();  // Direkt zu Authentik weiterleiten
     }
-  }, [isLoggedIn, router]);
+  }, [isAuthenticated, login]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -362,15 +362,15 @@ export default function ProfilePage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!isLoggedIn) {
+  if (!isAuthenticated) {
     return null; // Don't render anything while redirecting
   }
 
   // Beispiel-Profil (später aus Datenbank)
   const studentProfile: StudentProfile = {
     // Automatisch aus Datenbank
-    name: username || 'Max Mustermann',
-    email: 'max.mustermann@hochschule.de',
+    name: user?.profile?.name || 'Max Mustermann',
+    email: user?.profile?.email || 'max.mustermann@hochschule.de',
     university: 'Hochschule Karlsruhe',
     studyProgram: 'Elektro- und Informationstechnik',
     level: 3, // Level 1-6 → bestimmt die Farbe (1=Blau, 2=Grün, 3=Orange, 4=Lila, 5=Rot, 6=Gold)
