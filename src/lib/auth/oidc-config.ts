@@ -33,6 +33,5 @@ export const getUserManager =() => {
      if (!userManagerInstance) {
         userManagerInstance = new UserManager(oidcConfig());
     }
-
     return userManagerInstance;
 };
