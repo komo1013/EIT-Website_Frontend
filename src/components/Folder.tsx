@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface FolderProps {
   color?: string;
@@ -6,6 +7,9 @@ interface FolderProps {
   items?: React.ReactNode[];
   className?: string;
   label?: string;
+  icon?: React.ReactNode;
+  paperColors?: [string, string, string]; // [paper1, paper2, paper3] - individuelle Farben
+  paperClassName?: string; // CSS-Klasse für alle Papers
 }
 
 const darkenColor = (hex: string, percent: number): string => {
@@ -26,7 +30,16 @@ const darkenColor = (hex: string, percent: number): string => {
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
 };
 
-const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = [], className = '', label }) => {
+const Folder: React.FC<FolderProps> = ({ 
+  color = '#5227FF', 
+  size = 1, 
+  items = [], 
+  className = '', 
+  label,
+  icon,
+  paperColors,
+  paperClassName = ''
+}) => {
   const maxItems = 3;
   const papers = items.slice(0, maxItems);
   while (papers.length < maxItems) {
@@ -39,9 +52,11 @@ const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = []
   );
 
   const folderBackColor = darkenColor(color, 0.08);
-  const paper1 = darkenColor('#ffffff', 0.1);
-  const paper2 = darkenColor('#ffffff', 0.05);
-  const paper3 = '#ffffff';
+  
+  // Individuelle Paper-Farben oder Standard-Weiß
+  const paper1 = paperColors?.[0] ?? darkenColor('#ffffff', 0.1);
+  const paper2 = paperColors?.[1] ?? darkenColor('#ffffff', 0.05);
+  const paper3 = paperColors?.[2] ?? '#ffffff';
 
   const handleClick = () => {
     setOpen(prev => !prev);
@@ -83,34 +98,99 @@ const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = []
   const folderClassName = `folder ${open ? 'open' : ''}`.trim();
   const scaleStyle = { transform: `scale(${size})` };
 
-  return (
-    <div style={scaleStyle} className={className}>
-      <div className={folderClassName} style={folderStyle} onClick={handleClick}>
-        <div className="folder__back">
-          {papers.map((item, i) => (
-            <div
-              key={i}
-              className={`paper paper-${i + 1}`}
-              onMouseMove={e => handlePaperMouseMove(e, i)}
-              onMouseLeave={e => handlePaperMouseLeave(e, i)}
-              style={
-                open
-                  ? ({
-                      '--magnet-x': `${paperOffsets[i]?.x || 0}px`,
-                      '--magnet-y': `${paperOffsets[i]?.y || 0}px`
-                    } as React.CSSProperties)
-                  : {}
-              }
-            >
-              {item}
-            </div>
-          ))}
-          <div className="folder__front"></div>
-          <div className="folder__front right"></div>
-        </div>
+  // Schließen mit Escape-Taste
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        setOpen(false);
+        setPaperOffsets(Array.from({ length: maxItems }, () => ({ x: 0, y: 0 })));
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [open]);
+
+  // Body scroll deaktivieren wenn Modal offen
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setOpen(false);
+      setPaperOffsets(Array.from({ length: maxItems }, () => ({ x: 0, y: 0 })));
+    }
+  };
+
+  // Modal Portal für geöffneten Zustand
+  const modalContent = open && createPortal(
+    <div 
+      className="folder-modal-backdrop" 
+      onClick={handleBackdropClick}
+    >
+      <div className="folder-modal-content">
+        {papers.map((item, i) => (
+          <div
+            key={i}
+            className={`folder-modal-paper ${paperClassName}`.trim()}
+            onMouseMove={e => handlePaperMouseMove(e, i)}
+            onMouseLeave={e => handlePaperMouseLeave(e, i)}
+            style={{
+              background: i === 0 ? paper1 : i === 1 ? paper2 : paper3,
+              transform: `translate(${paperOffsets[i]?.x || 0}px, ${paperOffsets[i]?.y || 0}px)`
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {item}
+          </div>
+        ))}
       </div>
+      <button 
+        className="folder-modal-close"
+        onClick={() => {
+          setOpen(false);
+          setPaperOffsets(Array.from({ length: maxItems }, () => ({ x: 0, y: 0 })));
+        }}
+      >
+        ✕
+      </button>
+    </div>,
+    document.body
+  );
+
+  return (
+    <>
+      <div style={scaleStyle} className={className}>
+        <div className={folderClassName} style={folderStyle} onClick={handleClick}>
+          <div className="folder__back">
+            {/* Papers nur zeigen wenn nicht open (werden im Modal gezeigt) */}
+            {!open && papers.map((item, i) => (
+              <div
+                key={i}
+                className={`paper paper-${i + 1} ${paperClassName}`.trim()}
+              >
+                {/* Kein Inhalt hier, nur im Modal */}
+              </div>
+            ))}
+            <div className="folder__front"></div>
+            <div className="folder__front right"></div>
+            {/* Icon auf dem Folder - außerhalb der front divs */}
+            {icon && (
+              <div className="folder-icon">
+                {icon}
+              </div>
+            )}
+          </div>
+        </div>
         {label && <div className="folder-label">{label}</div>}
-    </div>
+      </div>
+      {modalContent}
+    </>
   );
 };
 
