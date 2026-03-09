@@ -2,7 +2,6 @@
 import React from "react";
 import NavBar from "@/components/navbar";
 import Construction from "@/components/construction";
-import Footer from "@/components/footer";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useEffect, useState } from "react";
 import Folder from "@/components/Folder";
@@ -22,12 +21,12 @@ interface PaperData {
 export default function Team() {
       const { currentBg } = useThemeContext();
       const [paperData, setPaperData] = useState<PaperData[]>([]);
-      useEffect(() => {
+      /*useEffect(() => {
     // Daten von der API abrufen
     fetch('/api/dein-endpoint')
       .then(res => res.json())
       .then(data => setPaperData(data));
-  }, []);
+  }, []);*/
   // Die JSON-Daten in React-Elemente für die Papers umwandeln
   const paperItems = paperData.map(paper => (
     <div key={paper.id} className="p-2 text-xs">
@@ -77,7 +76,7 @@ export default function Team() {
     ]}
        />
 
-       <Folder size={sizeoffolder} color="#d72305" className="custom-folder" label= "Finanzer"
+      <Folder size={sizeoffolder} color="#d72305" className="custom-folder" label= "Finanzer"
        icon={<img src= "/images/Amter_Icons/Finanzer.svg" alt="Finanzen Icon" className="w-6 h-6"/>}
       items={[ 
       <div key="1" className="p-2 text-xs">
@@ -283,7 +282,7 @@ export default function Team() {
       />
 
       <Folder size={sizeoffolder} color="#473e82" className="custom-folder" label= "Firmenbeauftragter"
-      icon={<img className="change-my-color" src= "/images/Amter_Icons/Firmenbeauftragter.svg" alt="Firmenbeauftragter Icon" className="w-6 h-6"/>}
+      icon={<img className="change-my-color w-6 h-6 " src= "/images/Amter_Icons/Firmenbeauftragter.svg" alt="Firmenbeauftragter Icon"/>}
       items={[ <div key = "1" className="p-2 text-xs">
         <h4 className="font-bold">Firmenbeauftragter</h4>
         <h5 className="font-bold text-black dark:text-Green">Beschreibung</h5>

@@ -8,3 +8,5 @@
 4) Installation for some Components
     Folder Componenets:  npx shadcn@latest add @react-bits/Folder-TS-CSS
     electrical Border:   npx shadcn@latest add @react-bits/ElectricBorder-JS-CSS
+    Animated List :      npx shadcn@latest add @react-bits/AnimatedList-JS-CSS
+    Fade Content :       npx shadcn@latest add @react-bits/FadeContent-JS-CSS
