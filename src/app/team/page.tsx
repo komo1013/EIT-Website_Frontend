@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import Folder from "@/components/Folder";
 
 const fertig = true; // ist eine Variable die vermeidet die nicht fertige Website zu zeigen
- const sizeoffolder = 2.5; // Größe der Folder, kann je nach Bedarf angepasst werden
+const sizeoffolder = 2.5; // Größe der Folder, kann je nach Bedarf angepasst werden
+
 interface PaperData {
   id: number;
   title: string;
