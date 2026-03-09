@@ -27,6 +27,11 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('EIT API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: data
+      });
       return NextResponse.json(
         { error: data.message || 'Login failed' },
         { status: response.status }
@@ -59,8 +64,9 @@ export async function POST(request: NextRequest) {
     return nextResponse;
   } catch (error) {
     console.error('Login API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: errorMessage },
       { status: 500 }
     );
   }

@@ -1,0 +1,64 @@
+strict digraph "dependency-cruiser output"{
+    rankdir="LR" splines="true" overlap="false" nodesep="0.16" ranksep="0.18" fontname="Helvetica-bold" fontsize="9" style="rounded,bold,filled" fillcolor="#ffffff" compound="true"
+    node [shape="box" style="rounded, filled" height="0.2" color="black" fillcolor="#ffffcc" fontcolor="black" fontname="Helvetica" fontsize="9"]
+    edge [arrowhead="normal" arrowsize="0.6" penwidth="2.0" color="#00000033" fontname="Helvetica" fontsize="9"]
+
+    // App Pages
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/about" {label="about" "src/app/about/page.tsx" [label=<page.tsx> tooltip="page.tsx" URL="src/app/about/page.tsx" fillcolor="#bbfeff"] } } }
+    "src/app/about/page.tsx" -> "src/contexts/ThemeContext.tsx"
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/accounts" {label="accounts" "src/app/accounts/page.tsx" [label=<page.tsx> tooltip="page.tsx" URL="src/app/accounts/page.tsx" fillcolor="#bbfeff"] } } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/api" {label="api" subgraph "cluster_src/app/api/auth" {label="auth" subgraph "cluster_src/app/api/auth/login" {label="login" "src/app/api/auth/login/route.ts" [label=<route.ts> tooltip="route.ts" URL="src/app/api/auth/login/route.ts" fillcolor="#ccffcc"] } } } } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/api" {label="api" subgraph "cluster_src/app/api/auth" {label="auth" subgraph "cluster_src/app/api/auth/logout" {label="logout" "src/app/api/auth/logout/route.ts" [label=<route.ts> tooltip="route.ts" URL="src/app/api/auth/logout/route.ts" fillcolor="#ccffcc"] } } } } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/api" {label="api" subgraph "cluster_src/app/api/raumzeit-persons" {label="raumzeit-persons" subgraph "cluster_src/app/api/raumzeit-persons/auth" {label="auth" "src/app/api/raumzeit-persons/auth/next_auth.js" [label=<next_auth.js> tooltip="next_auth.js" URL="src/app/api/raumzeit-persons/auth/next_auth.js" fillcolor="#ccffcc"] } } } } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/api" {label="api" subgraph "cluster_src/app/api/raumzeit-persons" {label="raumzeit-persons" "src/app/api/raumzeit-persons/nodemailer.js" [label=<nodemailer.js> tooltip="nodemailer.js" URL="src/app/api/raumzeit-persons/nodemailer.js" ] } } } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/api" {label="api" subgraph "cluster_src/app/api/raumzeit-persons" {label="raumzeit-persons" "src/app/api/raumzeit-persons/register.js" [label=<register.js> tooltip="register.js" URL="src/app/api/raumzeit-persons/register.js" ] } } } }
+    "src/app/api/raumzeit-persons/register.js" -> "src/app/api/raumzeit-persons/nodemailer.js"
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/globals.css" [label=<globals.css> tooltip="globals.css" URL="src/app/globals.css" ] } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/hero.ts" [label=<hero.ts> tooltip="hero.ts" URL="src/app/hero.ts" fillcolor="#ccffcc"] } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/layout.tsx" [label=<layout.tsx> tooltip="layout.tsx" URL="src/app/layout.tsx" fillcolor="#bbfeff"] } }
+    "src/app/layout.tsx" -> "src/app/globals.css"
+    "src/app/layout.tsx" -> "src/app/providers.tsx"
+    "src/app/layout.tsx" -> "src/fonts/fonts.ts"
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/not-found.tsx" [label=<not-found.tsx> tooltip="not-found.tsx" URL="src/app/not-found.tsx" fillcolor="#ccffcc"] } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/page.tsx" [label=<page.tsx> tooltip="page.tsx" URL="src/app/page.tsx" fillcolor="#bbfeff"] } }
+    "src/app/page.tsx" -> "src/contexts/ThemeContext.tsx"
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/profile" {label="profile" "src/app/profile/page.tsx" [label=<page.tsx> tooltip="page.tsx" URL="src/app/profile/page.tsx" fillcolor="#bbfeff"] } } }
+    "src/app/profile/page.tsx" -> "src/contexts/AuthContext.tsx"
+    "src/app/profile/page.tsx" -> "src/contexts/ThemeContext.tsx"
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/providers.tsx" [label=<providers.tsx> tooltip="providers.tsx" URL="src/app/providers.tsx" fillcolor="#bbfeff"] } }
+    "src/app/providers.tsx" -> "src/contexts/AuthContext.tsx"
+    "src/app/providers.tsx" -> "src/contexts/ThemeContext.tsx"
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/team" {label="team" "src/app/team/page.tsx" [label=<page.tsx> tooltip="page.tsx" URL="src/app/team/page.tsx" fillcolor="#bbfeff"] } } }
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" subgraph "cluster_src/app/vorteile_studenten" {label="vorteile_studenten" "src/app/vorteile_studenten/page.tsx" [label=<page.tsx> tooltip="page.tsx" URL="src/app/vorteile_studenten/page.tsx" fillcolor="#bbfeff"] } } }
+
+    // Contexts
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/contexts" {label="contexts" "src/contexts/AuthContext.tsx" [label=<AuthContext.tsx> tooltip="AuthContext.tsx" URL="src/contexts/AuthContext.tsx" fillcolor="#bbfeff"] } }
+    "src/contexts/AuthContext.tsx" -> "src/lib/api.ts"
+    
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/contexts" {label="contexts" "src/contexts/ThemeContext.tsx" [label=<ThemeContext.tsx> tooltip="ThemeContext.tsx" URL="src/contexts/ThemeContext.tsx" fillcolor="#bbfeff"] } }
+
+    // Fonts
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/fonts" {label="fonts" "src/fonts/fonts.ts" [label=<fonts.ts> tooltip="fonts.ts" URL="src/fonts/fonts.ts" fillcolor="#ddfeff"] } }
+
+    // Lib
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/lib" {label="lib" "src/lib/api.ts" [label=<api.ts> tooltip="api.ts" URL="src/lib/api.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/lib" {label="lib" "src/lib/utils.ts" [label=<utils.ts> tooltip="utils.ts" URL="src/lib/utils.ts" fillcolor="#ccffcc"] } }
+
+    // Types
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/types" {label="types" "src/types/svg.d.ts" [label=<svg.d.ts> tooltip="svg.d.ts" URL="src/types/svg.d.ts" fillcolor="#ccffcc"] } }
+}
