@@ -17,6 +17,7 @@ interface PaperData {
   // weitere Felder je nach Bedarf
 }
 
+
 export default function Team() {
       const { currentBg } = useThemeContext();
       const [paperData, setPaperData] = useState<PaperData[]>([]);
@@ -125,8 +126,8 @@ export default function Team() {
         <p>Die Fachschafts-Mutti kümmert sich um die Organisation und Die Sauberkeit im Fachsaftsraum.
           Sie sorgt dafür, dass der Raum ordentlich und einladend bleibt, damit sich alle Studierenden wohl fühlen.
         </p>
-    </div>,
-    <div key ="2" className="p-2 text-xs">
+      </div>,
+      <div key ="2" className="p-2 text-xs">
         <h4 className="font-bold">Fachschafts-Mutti</h4>
         <h5 className="font-bold text-black dark:text-black">Aufgaben</h5>
         <p>Ist für die Sauberkeit und Ordnung in der Fachschaft zuständig</p>
@@ -177,7 +178,7 @@ export default function Team() {
         <p>Ist Ansprechpartner bei Problemen mit der Technik (z.B. mit der Musikanlage)</p>
         <p>Drucker + Verbrauchsmaterial</p>
      </div>
-      ]}
+    ]}
       />
 
       <Folder size={sizeoffolder} color="#52b52e" className="custom-folder" label= "Pizza und Eis dream Team"
@@ -281,7 +282,7 @@ export default function Team() {
       />
 
       <Folder size={sizeoffolder} color="#473e82" className="custom-folder" label= "Firmenbeauftragter"
-      icon={<img src= "/images/Amter_Icons/Firmenbeauftragter.svg" alt="Firmenbeauftragter Icon" className="w-6 h-6"/>}
+      icon={<img className="change-my-color" src= "/images/Amter_Icons/Firmenbeauftragter.svg" alt="Firmenbeauftragter Icon" className="w-6 h-6"/>}
       items={[ <div key = "1" className="p-2 text-xs">
         <h4 className="font-bold">Firmenbeauftragter</h4>
         <h5 className="font-bold text-black dark:text-Green">Beschreibung</h5>
