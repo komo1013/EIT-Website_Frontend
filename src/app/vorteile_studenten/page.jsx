@@ -16,53 +16,59 @@ const itemsData = {
     beschreibung: 'Kostenloser Zugang zu GitHub Pro, JetBrains IDEs, und vielen weiteren Developer-Tools.',
     preis: 'Kostenlos',
     link: 'https://education.github.com/pack',
-    kategorie: 'Entwicklung'
+    kategorie: 'Rabatte',
+    Availabledirectlyonwebsite : true
   },
   'Spotify': {
     title: 'Spotify Premium',
     beschreibung: 'Musik-Streaming ohne Werbung mit Offline-Modus.',
     preis: '5,99€/Monat',
     link: 'https://www.spotify.com/de/student/',
-    kategorie: 'Unterhaltung'
+    kategorie: 'Unterhaltung',
+    Availabledirectlyonwebsite : true
   },
   'Youtube': {
     title: 'YouTube Premium',
     beschreibung: 'Werbefreies YouTube und YouTube Music inklusive.',
     preis: '7,49€/Monat',
     link: 'https://www.youtube.com/premium/student',
-    kategorie: 'Unterhaltung'
+    kategorie: 'Unterhaltung',
+    Availabledirectlyonwebsite : true
   },
   'Amazon Prime Video': {
     title: 'Amazon Prime Student',
     beschreibung: '6 Monate kostenlos testen, danach halber Preis für Prime mit Video, Music und Versand.',
     preis: '4,49€/Monat nach Probezeit',
     link: 'https://www.amazon.de/prime/student',
-    kategorie: 'Unterhaltung'
+    kategorie: 'Unterhaltung',
+    Availabledirectlyonwebsite : false,
+    Availability: 'Erfordert eine Ganz normale Anmeldung bei Amazon und dann beim Profil unter Prime Managment sich verifizieren zu lassen '
   },
   'Adobe Creative Cloud': {
     title: 'Adobe Creative Cloud',
     beschreibung: 'Photoshop, Illustrator, Premiere Pro und alle Adobe Apps mit 65% Rabatt.',
-    preis: '~19,50€/Monat (statt 65€)',
+    preis: '~19,50€/Monat (für Creative Cloud Pro)',
     link: 'https://www.adobe.com/de/creativecloud/plans.html',
-    kategorie: 'Kreativität'
+    kategorie: 'Kreativität',
+    Availabledirectlyonwebsite : true
   },
   'Microsoft 365': {
     title: 'Microsoft 365 Education',
-    beschreibung: 'Word, PowerPoint, Excel und Teams kostenlos für Studierende.',
-    preis: 'Kostenlos',
-    link: 'https://www.microsoft.com/de-de/education/products/office',
+    beschreibung: 'Word, PowerPoint, Excel und Teams kostenlos für Studierende zum Download und nicht nur die web apps.',
+    preis: ' Kostet 4,39€',
+    link: 'https://bildung365.de/index.htm?entityID=https%3A%2F%2Fbildung365.de%2Fshibboleth&return=https%3A%2F%2Fbildung365.de%2FShibboleth.sso%2FLogin%3FSAMLDS%3D1%26target%3Dss%253Amem%253A201d7a26f93ae384b1d1aee7d9489f036f7f651fd62dbd5aae570cb6ef7fd7ac',
     kategorie: 'Produktivität'
   },
   'Günstigere Kranken Versicherungen': {
     title: 'Studenten Krankenversicherung',
-    beschreibung: 'Vergünstigte Krankenversicherungstarife speziell für Studierende.',
+    beschreibung: 'Vergünstigte Krankenversicherungstarife speziell für Studierende. GIbt es bei vielen Anbietern ',
     preis: 'Variiert je nach Anbieter',
     link: '#',
     kategorie: 'Versicherung'
   },
   'Studitickets für Öffentliche Verkehrs mittel': {
     title: 'Semesterticket / Deutschlandticket',
-    beschreibung: 'Günstiger ÖPNV mit dem Semesterticket oder vergünstigtem Deutschlandticket.',
+    beschreibung: 'Günstiger ÖPNV mit vergünstigtem Deutschlandticket und der Studikarte die nachts als fahr Ticket dienen kann.',
     preis: 'Variiert nach Bundesland',
     link: '#',
     kategorie: 'Mobilität'
@@ -71,7 +77,7 @@ const itemsData = {
     title: 'BAföG',
     beschreibung: 'Staatliche Förderung für Studierende. Bei BAföG-Bezug auch GEZ-Befreiung möglich!',
     preis: 'Bis zu 934€/Monat',
-    link: 'https://www.bafoeg.de/',
+    link: 'https://www.bafög.de/bafoeg/de/das-bafoeg-alle-infos-auf-einen-blick/_documents/bafoeg-fuer-schuelerinnen-und-schueler.html',
     kategorie: 'Finanzen'
   },
   'Unidays': {
@@ -79,77 +85,90 @@ const itemsData = {
     beschreibung: 'Plattform für Studentenrabatte bei vielen bekannten Marken.',
     preis: 'Kostenlose Anmeldung',
     link: 'https://www.myunidays.com/DE/de-DE',
-    kategorie: 'Rabatte'
+    kategorie: 'Rabatte',
+    Availabledirectlyonwebsite : true
   },
   'Studentbeans App': {
     title: 'Student Beans',
     beschreibung: 'App mit exklusiven Studentenrabatten bei verschiedenen Shops.',
     preis: 'Kostenlose App',
     link: 'https://www.studentbeans.com/de',
-    kategorie: 'Rabatte'
+    kategorie: 'Rabatte',
+    Availabledirectlyonwebsite : true
   },
   'Apple Music': {
     title: 'Apple Music Student',
     beschreibung: 'Apple Music Abo zum vergünstigten Studentenpreis.',
     preis: '5,99€/Monat',
-    link: 'https://www.apple.com/de/shop/browse/home/students',
-    kategorie: 'Unterhaltung'
+    link: 'https://www.apple.com/de/apple-music/#plans',
+    kategorie: 'Unterhaltung',
+    Availabledirectlyonwebsite : true
   },
   'Onscape': {
     title: 'Onscape',
-    beschreibung: 'Kreatives Tool für Studierende.',
-    preis: 'Kostenlos für Studenten',
-    link: '#',
-    kategorie: 'Kreativität'
+    beschreibung: 'Kreatives Tool für Studierende. (CAD-system)',
+    preis: 'sehr Günstig für individuelle Lizenzen',
+    link: 'https://www.onshape.com/de/pricing',
+    kategorie: 'Kreativität',
+    Availabledirectlyonwebsite : true
   },
   'Günstige flüge Flaya': {
     title: 'Flyla - Studentenflüge',
     beschreibung: 'Günstige Flüge speziell für Studierende unter 27 Jahren.',
     preis: 'Vergünstigte Preise',
     link: 'https://www.flyla.de/',
-    kategorie: 'Reisen'
+    kategorie: 'Reisen',
+    Availabledirectlyonwebsite : true
   },
   'canva Pro': {
     title: 'Canva Pro for Education',
     beschreibung: 'Professionelles Design-Tool mit allen Pro-Features für Studierende.',
     preis: 'Kostenlos',
     link: 'https://www.canva.com/education/',
-    kategorie: 'Kreativität'
+    kategorie: 'Kreativität',
+    Availabledirectlyonwebsite : true
   },
   'Overleaf': {
     title: 'Overleaf',
-    beschreibung: 'Online LaTeX-Editor für wissenschaftliche Arbeiten. Premium-Features kostenlos.',
-    preis: 'Kostenlos',
-    link: 'https://www.overleaf.com/',
-    kategorie: 'Produktivität'
+    beschreibung: 'Online LaTeX-Editor für wissenschaftliche Arbeiten.',
+    preis: 'Es Gibt ein Gratis Abo mit allen wichtigen Funktionen',
+    link: 'https://www.overleaf.com/user/subscription/plans',
+    kategorie: 'Produktivität',
+    Availabledirectlyonwebsite : true
   },
   'Notion': {
     title: 'Notion Plus',
     beschreibung: 'All-in-One Workspace für Notizen, Projekte und Dokumentation.',
     preis: 'Kostenlos mit Uni-Mail',
-    link: 'https://www.notion.so/product/notion-for-education',
-    kategorie: 'Produktivität'
+    link: '#',
+    kategorie: 'Produktivität',
+    Availabledirectlyonwebsite : false,
+    Availability: 'Notion bietet keinen direkten Studentenrabatt mehr an, Aber über Github edducation kann man ein zugriff zuden Education vorteile von Notion.'
   },
   'Windows S': {
     title: 'Windows & Microsoft Tools',
     beschreibung: 'Kostenlose Windows-Lizenzen und Entwickler-Tools über Azure Dev Tools.',
     preis: 'Kostenlos',
     link: 'https://azure.microsoft.com/de-de/free/students/',
-    kategorie: 'Entwicklung'
+    kategorie: 'Entwicklung',
+    Availabledirectlyonwebsite : true
   },
   'Figma Education': {
     title: 'Figma Professional (Education)',
     beschreibung: 'Der Industrie-Standard für UI/UX Design - komplett kostenlos für Studenten.',
     preis: 'Kostenlos (spart ~15€/Monat)',
     link: 'https://www.figma.com/education/',
-    kategorie: 'Design'
+    kategorie: 'Design',
+    Availabledirectlyonwebsite : true,
   },
   '1Password': {
     title: '1Password',
     beschreibung: 'Einer der besten Passwortmanager - über GitHub Student Pack kostenlos.',
     preis: '1 Jahr kostenlos',
-    link: 'https://1password.com/students/',
-    kategorie: 'Produktivität'
+    link: '#',
+    kategorie: 'Produktivität',
+    Availabledirectlyonwebsite : false,
+    Availability: '1Password bietet keinen direkten Studentenrabatt mehr an, aber über den GitHub Student Pack kann man einen kostenlosen Zugang zu den Education-Vorteilen erhalten.'
   },
 };
 // Alle einzigartigen Kategorien extrahieren
@@ -220,7 +239,6 @@ export default function App() {
           <FadeContent blur={true} duration={1000} delay={0.2}>
             <AnimatedList 
               items={filteredItems} 
-              className="right"
               key='vorteile-studenten-list'
               width='400px'
               height='1000px'
@@ -274,6 +292,12 @@ export default function App() {
                     >
                       Zur Website →
                     </a>
+                  )}
+                  {/* Verfügbarkeitsinfo für Items ohne direkten Rabatt */}
+                  {!selectedItem.Availabledirectlyonwebsite && (
+                    <p className="text-sm text-yellow-400 mt-4">
+                      Hinweis: {selectedItem.Availability}
+                    </p>
                   )}
                 </div>
               ) : (
