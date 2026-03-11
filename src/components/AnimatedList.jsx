@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, useInView } from 'motion/react';
-import './CSS dateien/AnimatedList.css';
+import '../CSS_dateien/AnimatedList.css';
 
 const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }) => {
   const ref = useRef(null);

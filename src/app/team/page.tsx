@@ -5,6 +5,8 @@ import Construction from "@/components/construction";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useEffect, useState } from "react";
 import Folder from "@/components/Folder";
+import { fetchTeamData, groupByRolle, TeamData  } from "./handleteamdata";
+import { set } from "react-hook-form";
 
 const fertig = true; // ist eine Variable die vermeidet die nicht fertige Website zu zeigen
 const sizeoffolder = 2.5; // Größe der Folder, kann je nach Bedarf angepasst werden
@@ -13,20 +15,21 @@ interface PaperData {
   id: number;
   title: string;
   description?: string;
-
-  // weitere Felder je nach Bedarf
 }
 
 
 export default function Team() {
-      const { currentBg } = useThemeContext();
-      const [paperData, setPaperData] = useState<PaperData[]>([]);
-      /*useEffect(() => {
-    // Daten von der API abrufen
-    fetch('/api/dein-endpoint')
-      .then(res => res.json())
-      .then(data => setPaperData(data));
-  }, []);*/
+    const { currentBg } = useThemeContext();
+    const [paperData, setPaperData] = useState<PaperData[]>([]);
+    const [TeamData, setTeamData] = useState<TeamData[]>([]);
+    useEffect(() => {
+        fetchTeamData()
+        .then(data => {setTeamData(data)})
+        .catch(error => console.error("Fehler beim Laden der Teamdaten:", error));
+      },[]
+    );
+
+    const groupedTeamData = groupByRolle(TeamData);
   // Die JSON-Daten in React-Elemente für die Papers umwandeln
   const paperItems = paperData.map(paper => (
     <div key={paper.id} className="p-2 text-xs">
@@ -72,6 +75,17 @@ export default function Team() {
         <p>- Verwaltet die Fachschaft </p>
         <p>- Organisiert und führt die Sitzungen </p>
         <p>- Ist für die Erstellung und Verwaltung von Zugängen für Räume zuständig</p>
+      </div>,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Vorsitzender</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Vorsitz']?.map((vorsitzender, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{vorsitzender.firstname} {vorsitzender.lastname}</p>
+            <p>{vorsitzender.role_email}</p>
+            <p> Ofizieler Amt name: {vorsitzender.role_name}</p>
+          </div>
+        ))}
       </div>
     ]}
        />
@@ -92,6 +106,17 @@ export default function Team() {
         <p>- Bezahlt ausstehende Rechnungen der Fachschaft</p>
         <p>- Ist für die Verwaltung der Schlüssel (Metallschrank- und Safe-Schlüssel) zuständig</p>
         <p>- Ist für die Verwaltung des Safes und alles was sich dadrin befindliche zuständig</p>
+      </div>,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Finanzer</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Finanzer']?.map((finanzer, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{finanzer.firstname} {finanzer.lastname}</p>
+            <p>{finanzer.role_email}</p>
+            <p> Ofizieler Amt name: {finanzer.role_name}</p>
+          </div>
+        ))}
       </div>
     
     ]}
@@ -113,7 +138,18 @@ export default function Team() {
         <p>- hängt das aktuelle Protokoll im Glasschaukasten auf und archiviert alte Protokolle</p>
         <p>- Druckt bei Abstimmungen über Budget genug Protokoll aus, um diese an Haushaltsanträge anzuhängen</p>
         <p>- Allgemeine Organisation des Schaukastens/schwarzes Brett (aussortieren aller Aushänge, etc.)</p>
-      </div> 
+      </div> ,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Schriftführer</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Protokollant']?.map((Schriftführer, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{Schriftführer.firstname} {Schriftführer.lastname}</p>
+            <p>{Schriftführer.role_email}</p>
+            <p> Ofizieler Amt name: {Schriftführer.role_name}</p>
+          </div>
+        ))}
+      </div>
     ]}
       />
       
@@ -134,6 +170,17 @@ export default function Team() {
         <p>Behält den Überblick über den Bestand von Putzzeug (z.B. Putzlappen, Spülmittel, Spülmaschinentabs, usw.)</p>
         <p>Verwaltet das Fachschafts-Lager und führt die Lagerliste</p>
         <p>Ist für Leihanträge und das Ausleihen von Fachschaftszeug (welches über gewerbliche Gelder gekauft wurde) zuständig</p>
+      </div> ,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Fachschafts-Mutti</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Raumbeauftragter']?.map((mutti, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{mutti.firstname} {mutti.lastname}</p>
+            <p>{mutti.role_email}</p>
+            <p> Ofizieler Amt name: {mutti.role_name}</p>
+          </div>
+        ))}
       </div>
     ]}
       />
@@ -156,6 +203,17 @@ export default function Team() {
         <p>-Verteilt die Rollen für die Zugriffe auf die einzelnen Ordner</p>
         <p>-Ist Ansprechpartner für alles Rund um die Cloud</p>
         <p>-Verwaltet die Website</p>
+      </div> ,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">IT-Team</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['IT']?.map((it, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{it.firstname} {it.lastname}</p>
+            <p>{it.role_email}</p>
+            <p> Ofizieler Amt name: {it.role_name}</p>
+          </div>
+        ))}
       </div>
     ]}
       />
@@ -177,7 +235,18 @@ export default function Team() {
         <p>Behält den Überblick über den Bestand der Technik in der Fachschaft </p>
         <p>Ist Ansprechpartner bei Problemen mit der Technik (z.B. mit der Musikanlage)</p>
         <p>Drucker + Verbrauchsmaterial</p>
-     </div>
+     </div>,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Techniker</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Technik']?.map((techniker, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{techniker.firstname} {techniker.lastname}</p>
+            <p>{techniker.role_email}</p>
+            <p> Ofizieler Amt name: {techniker.role_name}</p>
+          </div>
+        ))}
+      </div>
     ]}
       />
 
@@ -196,8 +265,19 @@ export default function Team() {
         <p>- Kümmert sich um die Bestellung und den Verkauf von Pizza und Eis</p>
         <p>- Organisiert die Verteilung der Pizza und Eis an die Studierenden</p>
         <p>- kan ggf. das Pfand aus dem PfandKarton abgeben und das Altglas entsorgen</p>
+      </div> ,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Pizza und Eis dream Team</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Pizza und Eis']?.map((pizzaEis, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{pizzaEis.firstname} {pizzaEis.lastname}</p>
+            <p>{pizzaEis.role_email}</p>
+            <p> Ofizieler Amt name: {pizzaEis.role_name}</p>
+          </div>
+        ))}
       </div>
-        ]}
+    ]}
       />
 
       <Folder size={sizeoffolder} color="#1fe5de" className="custom-folder" label= "Getränke Wart"
@@ -215,7 +295,17 @@ export default function Team() {
         <p>- Kümmert sich um die Bestellung und Verwaltung der Getränke in der Fachschaft</p>
         <p>- Stellt sicher, dass immer ausreichend Getränke zur Verfügung stehen</p>
         <p>- Organisiert die Getränkeverteilung bei Veranstaltungen</p>
-      
+      </div>,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Getränke Wart</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Getränkewart']?.map((getränkeWart, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{getränkeWart.firstname} {getränkeWart.lastname}</p>
+            <p>{getränkeWart.role_email}</p>
+            <p> Ofizieler Amt name: {getränkeWart.role_name}</p>
+          </div>
+        ))}
       </div>
       ]}
       />
@@ -235,6 +325,17 @@ export default function Team() {
         <p>- Organisiert die O-Phasen für die neuen Studierenden</p>
         <p>- Plant Aktivitäten und Veranstaltungen für die O-Phasen</p>
         <p>- Koordiniert die O-Phasen mit anderen Teams und der Universität</p>
+      </div>,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">O-Phasen Team</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['O-Phase']?.map((oPhasen, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{oPhasen.firstname} {oPhasen.lastname}</p>
+            <p>{oPhasen.role_email}</p>
+            <p> Ofizieler Amt name: {oPhasen.role_name}</p>
+          </div>
+        ))}
       </div>
     ]}
       />
@@ -255,8 +356,18 @@ export default function Team() {
         <p>- Plant Veranstaltungen und meldet diese ggf. an</p>
         <p>-Besorgt das nötige Zeug für die geplanten Veranstaltungen (nach Absprache mit den Finanzer-n/-innen)</p>
         <p>-Sucht Helfer für die geplanten Veranstaltungen</p>
-
-      </div>
+      </div>,
+      <div key = "3">
+        <h4>Events-Team</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Event Team']?.map((event, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{event.firstname} {event.lastname}</p>
+            <p>{event.role_email}</p>
+            <p> Ofizieler Amt name: {event.role_name}</p>
+          </div>
+        ))}
+        </div>
     ]}
       />
       
@@ -277,8 +388,19 @@ export default function Team() {
         <p>- Verteilt die Rollen für die Zugriffe auf die einzelnen Ordner</p>
         <p>- Ist Ansprechpartner für alles Rund um die Cloud</p>
         <p>- Verwaltet die Website</p>
+      </div>,
+      <div key = "3" className="p-2 text-xs">
+        <h4 className="font-bold">Social Media</h4>
+        <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+        {groupByRolle(TeamData)['Social Media']?.map((socialMedia, index) => (
+          <div key={index} className="mt-2">
+            <p className="font-bold">{socialMedia.firstname} {socialMedia.lastname}</p>
+            <p>{socialMedia.role_email}</p>
+            <p> Ofizieler Amt name: {socialMedia.role_name}</p>
+          </div>
+        ))}
       </div>
-     ]}
+    ]}
       />
 
       <Folder size={sizeoffolder} color="#473e82" className="custom-folder" label= "Firmenbeauftragter"
@@ -288,7 +410,7 @@ export default function Team() {
         <h5 className="font-bold text-black dark:text-Green">Beschreibung</h5>
         <p>Der Firmenbeauftragte ist für die Pflege der Beziehungen zwischen der Fachschaft und den Unternehmen zuständig, 
           die Praktika, Abschlussarbeiten oder andere Kooperationen mit der Fachschaft anbieten.</p>
-      </div> ,
+        </div> ,
         <div key = "2" className="p-2 text-xs">
         <h4 className="font-bold">Firmenbeauftragter</h4>
         <h5 className="font-bold text-black dark:text-black">Aufgaben</h5>
@@ -296,8 +418,20 @@ export default function Team() {
         <p>- Organisiert Exkursionen</p>
         <p>- Kümmert sich um die Beschaffung von O-Phasen „Goodies“</p>
         <p>- Praxissemester Berichte verwalten</p>
-        </div>
-      ]}
+        </div>,
+        <div key = "3" className="p-2 text-xs">
+          <h4 className="font-bold">Firmenbeauftragter</h4>
+          <h5 className="font-bold text-black dark:text-black">Ansprechpartner</h5>
+          {groupByRolle(TeamData)['Career Contacts']?.map((firmenbeauftragter, index) => (
+            <div key={index} className="mt-2">
+              <p className="font-bold">{firmenbeauftragter.firstname} {firmenbeauftragter.lastname}</p>
+              <p>{firmenbeauftragter.role_email}</p>
+              <p> Ofizieler Amt name: {firmenbeauftragter.role_name}</p>
+            </div>
+          ))}
+           </div>
+        ]}
+         
       />
       
       </div>
