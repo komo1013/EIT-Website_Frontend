@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, useInView } from 'motion/react';
-import './CSS dateien/AnimatedList.css';
+import '../CSS_dateien/AnimatedList.css';
 
 const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }) => {
   const ref = useRef(null);
@@ -15,6 +15,7 @@ const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }) => 
       animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.7, opacity: 0 }}
       transition={{ duration: 0.2, delay }}
       style={{ marginBottom: '1rem', cursor: 'pointer' }}
+      height = '50px'
     >
       {children}
     </motion.div>
