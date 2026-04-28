@@ -1,10 +1,14 @@
 "use client";
 
 import { HeroUIProvider } from "@heroui/react";
-import { ThemeProvider as NextThemesProvider, type Attribute } from "next-themes";
+import {
+  ThemeProvider as NextThemesProvider,
+  type Attribute,
+} from "next-themes";
 import { useRouter } from "next/navigation";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider as ColorThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -19,19 +23,19 @@ export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
 
   return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem={false}
-      {...themeProps}
-    >
-      <HeroUIProvider>
-        <AuthProvider>
-          <ColorThemeProvider>
-            {children}
-          </ColorThemeProvider>
-        </AuthProvider>
-      </HeroUIProvider>
-    </NextThemesProvider>
+    <SessionProvider>
+      <AuthProvider>
+        <NextThemesProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          {...themeProps}
+        >
+          <HeroUIProvider>
+            <ColorThemeProvider>{children}</ColorThemeProvider>
+          </HeroUIProvider>
+        </NextThemesProvider>
+      </AuthProvider>
+    </SessionProvider>
   );
 }
