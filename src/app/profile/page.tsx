@@ -2,7 +2,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import NavBar from "@/components/navbar";
 import { ProfileCard, ColorTheme, StudentProfile } from '@/components/profile/profile-card';
@@ -237,7 +237,12 @@ function MiniCalendar({
 }
 
 export default function ProfilePage() {
-  const { isAuthenticated, user, logout ,login } = useAuth();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
+  const user = session?.user;
+  const login = () => signIn("authentik");
+  const logout = () => signOut();
+
   const { colorTheme, setColorTheme, currentBg } = useThemeContext();
   
   const [isOn, setIsOn] = useState(false);
@@ -324,10 +329,10 @@ export default function ProfilePage() {
 
   // Redirect to Authentik login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (status === "unauthenticated") {
       login();  // Direkt zu Authentik weiterleiten
     }
-  }, [isAuthenticated, login]);
+  }, [status]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -362,15 +367,15 @@ export default function ProfilePage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!isAuthenticated) {
+  if (status === "loading" || status === "unauthenticated") {
     return null; // Don't render anything while redirecting
   }
 
   // Beispiel-Profil (später aus Datenbank)
   const studentProfile: StudentProfile = {
     // Automatisch aus Datenbank
-    name: user?.profile?.name || 'Max Mustermann',
-    email: user?.profile?.email || 'max.mustermann@hochschule.de',
+    name: user?.name || 'Max Mustermann',
+    email: user?.email || 'max.mustermann@hochschule.de',
     university: 'Hochschule Karlsruhe',
     studyProgram: 'Elektro- und Informationstechnik',
     level: 3, // Level 1-6 → bestimmt die Farbe (1=Blau, 2=Grün, 3=Orange, 4=Lila, 5=Rot, 6=Gold)

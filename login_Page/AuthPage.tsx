@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Input, Button, Card, CardBody, CardHeader } from "@heroui/react";
 import { Toaster } from "@/components/components/ui/sonner";
