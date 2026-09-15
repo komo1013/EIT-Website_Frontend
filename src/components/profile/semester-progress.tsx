@@ -1,5 +1,5 @@
 import { ColorTheme } from './profile-card';
-
+import { Eye, EyeOff } from 'lucide-react';
 export interface Lab {
   id: string;
   name: string;
@@ -7,13 +7,17 @@ export interface Lab {
   semester: number;
   preparation?: string;
   startDate?: string;
-  frequency?: 'weekly' | 'biweekly';
+  endDate?: string;
+  dayOfWeek?: number;
+  time?: string;
+  frequency?: 'once' | 'weekly' | 'biweekly';
 }
 
 export interface SemesterData {
   semester: number;
   labs: Lab[];
   preparation: string;
+  voluntaryLabs?: Lab[];
 }
 
 interface SemesterProgressProps {
@@ -23,6 +27,7 @@ interface SemesterProgressProps {
   isOwner: boolean;
   isVisible: boolean;
   onVisibilityToggle: () => void;
+  onVoluntaryLabAdd?: (lab: Lab) => void;
 }
 
 export function SemesterProgress({
@@ -38,8 +43,9 @@ export function SemesterProgress({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Semester Fortschritt</h2>
         {isOwner && (
-          <button onClick={onVisibilityToggle} className="text-sm opacity-60 hover:opacity-100">
-            {isVisible ? 'Ausblenden' : 'Einblenden'}
+          <button onClick={onVisibilityToggle} className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+          {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        
           </button>
         )}
       </div>
@@ -54,6 +60,10 @@ export function SemesterProgress({
                   {sem.labs.map((lab) => (
                     <li key={lab.id} className="text-sm">
                       {lab.name} - {lab.location}
+                      {lab.dayOfWeek !== undefined && (
+                        <span className="opacity-70"> · {['Mo','Di','Mi','Do','Fr','Sa','So'][lab.dayOfWeek]}</span>
+                      )}
+                      {lab.time && <span className="opacity-70"> · {lab.time}</span>}
                     </li>
                   ))}
                 </ul>

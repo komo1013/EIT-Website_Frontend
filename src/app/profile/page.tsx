@@ -2,6 +2,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import NavBar from "@/components/navbar";
@@ -38,8 +39,7 @@ function MiniCalendar({
 }) {
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   
-  // Today's date: October 24, 2025
-  const today = new Date(2025, 9, 24); // Month is 0-indexed
+  const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const currentDay = today.getDate();
@@ -59,36 +59,73 @@ function MiniCalendar({
     days.push(i);
   }
 
-  // Helper function to check if a lab occurs on a specific date
+  const getLabRecurringWeekday = (lab: Lab): number | null => {
+    if (lab.dayOfWeek !== undefined && lab.dayOfWeek >= 0 && lab.dayOfWeek <= 6) {
+      return lab.dayOfWeek;
+    }
+
+    if (!lab.startDate) {
+      return null;
+    }
+
+    const startDate = new Date(lab.startDate);
+    if (Number.isNaN(startDate.getTime())) {
+      return null;
+    }
+
+    return startDate.getDay();
+  };
+
   const getLabsOnDate = (day: number): LabOnDay[] => {
     const targetDate = new Date(currentYear, currentMonth, day);
     const labsOnDay: LabOnDay[] = [];
 
     semesterData.forEach(semData => {
       semData.labs.forEach((lab: Lab) => {
-        if (!lab.startDate) return;
+        const recurrenceDay = getLabRecurringWeekday(lab);
+        if (recurrenceDay === null) return;
 
-        const startDate = new Date(lab.startDate);
-        if (startDate > targetDate) return; // Lab hasn't started yet
+        if (lab.endDate) {
+          const endDate = new Date(`${lab.endDate}T23:59:59`);
+          if (targetDate > endDate) return;
+        }
+
+        if (!lab.startDate) {
+          if (targetDate.getDay() === recurrenceDay) {
+            labsOnDay.push({ lab, semester: semData.semester });
+          }
+          return;
+        }
+
+        const startDate = new Date(`${lab.startDate}T00:00:00`);
+        if (Number.isNaN(startDate.getTime())) {
+          return;
+        }
+
+        if (startDate > targetDate) return;
 
         const daysDiff = Math.floor((targetDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (lab.frequency === 'weekly') {
-          // Check if it's the same day of week
-          if (targetDate.getDay() === startDate.getDay()) {
+
+        if (lab.frequency === 'once') {
+          if (targetDate.getTime() === startDate.getTime()) {
+            labsOnDay.push({ lab, semester: semData.semester });
+          }
+        } else if (lab.frequency === 'weekly') {
+          if (targetDate.getDay() === recurrenceDay) {
             labsOnDay.push({ lab, semester: semData.semester });
           }
         } else if (lab.frequency === 'biweekly') {
-          // Check if it's the same day of week and the week count is even
-          if (targetDate.getDay() === startDate.getDay() && daysDiff % 14 === 0) {
+          if (targetDate.getDay() === recurrenceDay && daysDiff % 14 === 0) {
             labsOnDay.push({ lab, semester: semData.semester });
           }
+        } else if (targetDate.getDay() === recurrenceDay) {
+          labsOnDay.push({ lab, semester: semData.semester });
         }
       });
     });
 
     return labsOnDay;
-  }
+  };
   
   return (
     <div className="relative">
@@ -242,12 +279,14 @@ export default function ProfilePage() {
   const user = session?.user;
   const login = () => signIn("authentik");
   const logout = () => signOut();
+  const searchParams = useSearchParams();
 
   const { colorTheme, setColorTheme, currentBg } = useThemeContext();
   
   const [isOn, setIsOn] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [streamParticles, setStreamParticles] = useState<StreamParticle[]>([]);
+  const [editorMode, setEditorMode] = useState(searchParams.get("editor") === "1");
   
   // User State - In Produktion: aus Datenbank oder Context
   const [isOwner, setIsOwner] = useState(true); // Simuliert: aktueller User ist der Kontoinhaber
@@ -288,44 +327,161 @@ export default function ProfilePage() {
     );
   };
 
+  const updateMilestoneTitle = (milestoneId: string, title: string) => {
+    setStudyMilestones(milestones =>
+      milestones.map(milestone =>
+        milestone.id === milestoneId ? { ...milestone, title } : milestone
+      )
+    );
+  };
+
+  const updateProjectTask = (taskId: string, title: string) => {
+    setProjectData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(task =>
+        task.id === taskId ? { ...task, title } : task
+      )
+    }));
+  };
+
+  const createLab = (semester: number, name = 'Neues Labor'): Lab => {
+    const today = new Date();
+    const startDate = today.toISOString().slice(0, 10);
+    const endDate = new Date(today.getTime() + 100 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    return {
+      id: `lab-${semester}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name,
+      location: 'Raum TBD',
+      semester,
+      preparation: 'Vorbereitung folgt',
+      startDate,
+      endDate,
+      dayOfWeek: 0,
+      time: '09:00',
+      frequency: 'weekly',
+    };
+  };
+
+  const updateSemesterPreparation = (semester: number, preparation: string) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester ? { ...sem, preparation } : sem
+      )
+    );
+  };
+
+  const updateLabField = (
+    semester: number,
+    labId: string,
+    field: keyof Lab,
+    value: string | number | undefined
+  ) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester
+          ? {
+              ...sem,
+              labs: sem.labs.map(lab =>
+                lab.id === labId ? { ...lab, [field]: value } : lab
+              ),
+            }
+          : sem
+      )
+    );
+  };
+
+  const addLabToSemester = (semester: number) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester
+          ? { ...sem, labs: [...sem.labs, createLab(semester)] }
+          : sem
+      )
+    );
+  };
+
+  const removeLabFromSemester = (semester: number, labId: string) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester
+          ? { ...sem, labs: sem.labs.filter(lab => lab.id !== labId) }
+          : sem
+      )
+    );
+  };
+
+  const STORAGE_KEY = 'profile-editor-state-v1';
+
+  // Example-Profil (später aus Datenbank)
+  const [studentProfile, setStudentProfile] = useState<StudentProfile>({
+    name: user?.name || 'Max Mustermann',
+    email: user?.email || 'max.mustermann@hochschule.de',
+    university: 'Hochschule Karlsruhe',
+    studyProgram: 'Elektro- und Informationstechnik',
+    level: 3,
+    specialization: 'Automatisierungstechnik',
+    specializationIcon: '/images/Amter_Icons/automatisierung.svg',
+    motivationImageUrl: 'https://images.unsplash.com/photo-1744262056245-70eefd885e10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3RpdmF0aW9uJTIwaW5zcGlyYXRpb24lMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYxMTYxMjY4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    bio: 'Leidenschaftlicher Student der Elektrotechnik mit Fokus auf erneuerbare Energien und intelligente Stromnetze. Fasziniert von der Kraft der Elektrizität und ihrer Rolle in der nachhaltigen Zukunft.',
+    linkedinUrl: 'https://linkedin.com',
+    githubUrl: 'https://github.com',
+  });
+
   // Semester Progress State
   const [semesterData, setSemesterData] = useState<SemesterData[]>([
-    { 
-      semester: 1, 
-      labs: [
-        { 
-          id: '1', 
-          name: 'Physik-Labor', 
-          location: 'Gebäude A, Raum 101', 
-          semester: 1,
-          preparation: 'Grundlagen wiederholen',
-          startDate: '2025-10-06', // Monday
-          frequency: 'weekly'
-        }
-      ], 
-      preparation: 'Grundlagen der Elektrotechnik wiederholen' 
-    },
-    { 
-      semester: 2, 
-      labs: [
-        { 
-          id: '2', 
-          name: 'Elektronik-Labor', 
-          location: 'Gebäude A, Raum 203', 
-          semester: 2,
-          preparation: 'Schaltpläne vorbereiten',
-          startDate: '2025-10-08', // Wednesday
-          frequency: 'biweekly'
-        }
-      ], 
-      preparation: 'Schaltungsanalyse vorbereiten' 
-    },
+    { semester: 1, labs: [createLab(1, 'Mikrocontroller-Labor')], preparation: 'Erste Vorlesung vorbereitet' },
+    { semester: 2, labs: [], preparation: '' },
     { semester: 3, labs: [], preparation: '' },
     { semester: 4, labs: [], preparation: '' },
     { semester: 5, labs: [], preparation: '' },
     { semester: 6, labs: [], preparation: '' },
   ]);
   const [semesterVisible, setSemesterVisible] = useState(true);
+
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (!savedState) return;
+
+      const parsed = JSON.parse(savedState) as {
+        studentProfile?: Partial<StudentProfile>;
+        projectData?: Partial<ProjectData>;
+        studyMilestones?: StudyMilestone[];
+        semesterData?: SemesterData[];
+      };
+
+      if (parsed.studentProfile) {
+        setStudentProfile(prev => ({ ...prev, ...parsed.studentProfile }));
+      }
+      if (parsed.projectData) {
+        setProjectData(prev => ({ ...prev, ...parsed.projectData }));
+      }
+      if (parsed.studyMilestones) {
+        setStudyMilestones(parsed.studyMilestones);
+      }
+      if (parsed.semesterData) {
+        setSemesterData(parsed.semesterData);
+      }
+    } catch (error) {
+      console.warn('Could not restore profile state from localStorage', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ studentProfile, projectData, studyMilestones, semesterData })
+      );
+    } catch (error) {
+      console.warn('Could not save profile state to localStorage', error);
+    }
+  }, [studentProfile, projectData, studyMilestones, semesterData]);
+
+  useEffect(() => {
+    setEditorMode(searchParams.get("editor") === "1");
+  }, [searchParams]);
 
   // Redirect to Authentik login if not authenticated
   useEffect(() => {
@@ -353,40 +509,49 @@ export default function ProfilePage() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Animate and clean up particles
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStreamParticles(prev => {
-        // Age all particles and remove old ones
-        return prev
-          .map(p => ({ ...p, age: p.age + 1 }))
-          .filter(p => p.age < 30); // Keep particles for ~30 frames
-      });
-    }, 50); // Update every 50ms
+    // Animate and clean up particles
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setStreamParticles(prev => {
+          // Age all particles and remove old ones
+          return prev
+            .map(p => ({ ...p, age: p.age + 1 }))
+            .filter(p => p.age < 30); // Keep particles for ~30 frames
+        });
+      }, 50); // Update every 50ms
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    }, []);
 
+  const canEdit = isOwner || editorMode;
+  // Option for the Specification selection
+  const specializationOptions = [
+    {
+      id: "automatisierung",
+      label: "Automatisierungstechnik",
+      icon: "/images/zahnrad_a.svg",
+    },
+    {
+      id: "energietechnik",
+      label: "Energietechnik",
+      icon: "/images/electric_e.png",
+    },
+    {
+      id: "Informationstechnik",
+      label: "Informationstechnik",
+      icon: "/images/signal_i.svg",
+    },
+  ];
+  const handleSpecializationSelect = (selected: { label: string; icon: string }) => {
+  setStudentProfile((prev) => ({
+    ...prev,
+    specialization: selected.label,
+    specializationIcon: selected.icon,
+  }));
+  };
   if (status === "loading" || status === "unauthenticated") {
     return null; // Don't render anything while redirecting
   }
-
-  // Beispiel-Profil (später aus Datenbank)
-  const studentProfile: StudentProfile = {
-    // Automatisch aus Datenbank
-    name: user?.name || 'Max Mustermann',
-    email: user?.email || 'max.mustermann@hochschule.de',
-    university: 'Hochschule Karlsruhe',
-    studyProgram: 'Elektro- und Informationstechnik',
-    level: 3, // Level 1-6 → bestimmt die Farbe (1=Blau, 2=Grün, 3=Orange, 4=Lila, 5=Rot, 6=Gold)
-    
-    // Vom Studenten wählbar
-    specialization: 'Elektrotechnik',
-    motivationImageUrl: 'https://images.unsplash.com/photo-1744262056245-70eefd885e10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3RpdmF0aW9uJTIwaW5zcGlyYXRpb24lMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYxMTYxMjY4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    bio: 'Leidenschaftlicher Student der Elektrotechnik mit Fokus auf erneuerbare Energien und intelligente Stromnetze. Fasziniert von der Kraft der Elektrizität und ihrer Rolle in der nachhaltigen Zukunft.',
-    linkedinUrl: 'https://linkedin.com',
-    githubUrl: 'https://github.com',
-  };
 
   return (
     <>
@@ -472,7 +637,7 @@ export default function ProfilePage() {
           }}
         />
         
-        {/* Floating particles */}
+        {/* Floating particles
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(15)].map((_, i) => (
             <div
@@ -487,20 +652,278 @@ export default function ProfilePage() {
               }}
             />
           ))}
+        </div> */}
+
+        <div className="relative z-10 max-w-6xl mx-auto flex justify-end px-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setEditorMode((prev) => !prev)}
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:bg-white/15"
+            aria-label={editorMode ? 'Editor Modus aktiv' : 'Editor Modus'}
+          >
+            <img src="/images/Amter_Icons/einstellung.svg" alt="" className="h-4 w-4" />
+            <span>{editorMode ? 'Editor Modus: Aktiv' : 'Editor Modus'}</span>
+          </button>
         </div>
 
         {/* Profile Section */}
-        <div className="relative flex items-center justify-center p-4 min-h-screen">
-          <div className="relative z-10 w-full">
+        <div className="relative flex items-center justify-center p-4 min-h-screen pt-2">
+          <div className="relative z-10 w-full max-w-md">
             <ProfileCard profile={studentProfile} colorTheme={colorTheme} />
           </div>
           
-          {/* Color Picker - für Demo/Vorschau */}
-          <ColorPicker 
-            selectedColor={colorTheme} 
-            onColorChange={setColorTheme} 
-          />
+          {editorMode && (
+            <ColorPicker 
+              selectedColor={colorTheme} 
+              onColorChange={setColorTheme} 
+            />
+          )}
         </div>
+
+        {editorMode && (
+          <div className="relative z-10 max-w-6xl mx-auto px-8 pb-8">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
+                <h3 className="mb-3 text-lg font-semibold text-white">Profil bearbeiten</h3>
+                <div className="space-y-3">
+                  <label className="block text-sm text-slate-200">
+                    Name
+                    <input
+                      value={studentProfile.name}
+                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, name: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                    />
+                  </label>
+                  <label className="block text-sm text-slate-200">
+                    Studiengang
+                    <input
+                      value={studentProfile.studyProgram}
+                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, studyProgram: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                    />
+                  </label>
+                  <label className="block text-sm text-slate-200">
+                    Motivationsbild URL
+                    <input
+                      value={studentProfile.motivationImageUrl || ''}
+                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, motivationImageUrl: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                    />
+                  </label>
+                  <label className="block text-sm text-slate-200">
+                    Bio
+                    <textarea
+                      value={studentProfile.bio || ''}
+                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, bio: e.target.value }))}
+                      className="mt-1 min-h-24 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                    />
+                  </label>
+                  <label className="block text-sm text-slate-200">
+                    Vertiefungsrichtung
+                    <div className="space-y-2">
+                      {specializationOptions.map((option) => {
+                        const selected = studentProfile.specialization === option.label;
+                      
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => handleSpecializationSelect(option)}
+                            className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left ${
+                              selected
+                                ? "border-blue-400 bg-blue-500/10"
+                                : "border-white/10 bg-slate-950/30"
+                            }`}
+                          >
+                            <img src={option.icon} alt="" className="h-5 w-5" />
+                            <span>{option.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </label>
+  
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
+                <h3 className="mb-3 text-lg font-semibold text-white">Projekt</h3>
+                <div className="space-y-3">
+                  <label className="block text-sm text-slate-200">
+                    Professor
+                    <input
+                      value={projectData.professor}
+                      onChange={(e) => setProjectData((prev) => ({ ...prev, professor: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                    />
+                  </label>
+                  {projectData.tasks.map((task) => (
+                    <label key={task.id} className="block text-sm text-slate-200">
+                      {task.title}
+                      <input
+                        value={task.title}
+                        onChange={(e) => updateProjectTask(task.id, e.target.value)}
+                        className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
+                <h3 className="mb-3 text-lg font-semibold text-white">Studium</h3>
+                <div className="space-y-3">
+                  {studyMilestones.map((milestone) => (
+                    <label key={milestone.id} className="block text-sm text-slate-200">
+                      Meilenstein
+                      <input
+                        value={milestone.title}
+                        onChange={(e) => updateMilestoneTitle(milestone.id, e.target.value)}
+                        className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
+              <h3 className="mb-3 text-lg font-semibold text-white">Semester Vorbereitung & Labore</h3>
+              <div className="space-y-6">
+                {semesterData.map((sem) => (
+                  <div key={sem.semester} className="rounded-lg border border-white/10 bg-slate-950/20 p-3">
+                    <label className="block text-sm text-slate-200">
+                      Semester {sem.semester} – Vorbereitung
+                      <input
+                        value={sem.preparation}
+                        onChange={(e) => updateSemesterPreparation(sem.semester, e.target.value)}
+                        className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                      />
+                    </label>
+
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => addLabToSemester(sem.semester)}
+                        className="rounded-md border border-blue-400/40 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-100 transition hover:bg-blue-500/20"
+                      >
+                        Labor hinzufügen
+                      </button>
+                    </div>
+
+                    {sem.labs.length > 0 ? (
+                      <div className="mt-4 space-y-3">
+                        {sem.labs.map((lab) => (
+                          <div key={lab.id} className="rounded-md border border-white/10 bg-slate-900/30 p-3">
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <label className="block text-xs text-slate-300">
+                                Laborname
+                                <input
+                                  value={lab.name}
+                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'name', e.target.value)}
+                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                                />
+                              </label>
+                              <label className="block text-xs text-slate-300">
+                                Raum
+                                <input
+                                  value={lab.location}
+                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'location', e.target.value)}
+                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                                />
+                              </label>
+                            </div>
+
+                            <div className="mt-3 grid gap-3 md:grid-cols-2">
+                              <label className="block text-xs text-slate-300">
+                                Wochentag
+                                <select
+                                  value={lab.dayOfWeek ?? 0}
+                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'dayOfWeek', Number(e.target.value))}
+                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                                >
+                                  {['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'].map((weekday, index) => (
+                                    <option key={weekday} value={index}>{weekday}</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="block text-xs text-slate-300">
+                                Uhrzeit
+                                <input
+                                  type="time"
+                                  value={lab.time ?? ''}
+                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'time', e.target.value || undefined)}
+                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                                />
+                              </label>
+                            </div>
+
+                            <div className="mt-3 grid gap-3 md:grid-cols-2">
+                              <label className="block text-xs text-slate-300">
+                                Startdatum
+                                <input
+                                  type="date"
+                                  value={lab.startDate ?? ''}
+                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'startDate', e.target.value || undefined)}
+                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                                />
+                              </label>
+                              <label className="block text-xs text-slate-300">
+                                Enddatum
+                                <input
+                                  type="date"
+                                  value={lab.endDate ?? ''}
+                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'endDate', e.target.value || undefined)}
+                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                                />
+                              </label>
+                            </div>
+
+                            <div className="mt-3 grid gap-3 md:grid-cols-2">
+                              <label className="block text-xs text-slate-300">
+                                Häufigkeit
+                                <select
+                                  value={lab.frequency ?? 'weekly'}
+                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'frequency', e.target.value as 'once' | 'weekly' | 'biweekly')}
+                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                                >
+                                  <option value="once">Einmalig</option>
+                                  <option value="weekly">Wöchentlich</option>
+                                  <option value="biweekly">Alle 2 Wochen</option>
+                                </select>
+                              </label>
+
+                              <div className="flex items-end">
+                                <button
+                                  type="button"
+                                  onClick={() => removeLabFromSemester(sem.semester, lab.id)}
+                                  className="w-full rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-100 transition hover:bg-red-500/20"
+                                >
+                                  Labor löschen
+                                </button>
+                              </div>
+                            </div>
+
+                            <label className="mt-3 block text-xs text-slate-300">
+                              Vorbereitung
+                              <input
+                                value={lab.preparation ?? ''}
+                                onChange={(e) => updateLabField(sem.semester, lab.id, 'preparation', e.target.value)}
+                                className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
+                              />
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-400">Keine Labore für dieses Semester.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content Section */}
         <div className="relative p-8 min-h-screen">

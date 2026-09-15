@@ -18,7 +18,7 @@ export function ColorPicker({ selectedColor, onColorChange }: ColorPickerProps) 
   };
 
   return (
-    <div className="fixed top-8 right-8 z-50 flex gap-2 bg-white/10 backdrop-blur-sm p-3 rounded-full border border-white/20">
+    <div className="fixed top-20 right-8 z-50 flex gap-2 bg-white/10 backdrop-blur-sm p-3 rounded-full border border-white/20 shadow-lg">
       {colors.map((color) => (
         <button
           key={color}

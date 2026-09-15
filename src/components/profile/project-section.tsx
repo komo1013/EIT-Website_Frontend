@@ -1,4 +1,5 @@
 import { ColorTheme } from './profile-card';
+import { Eye, EyeOff } from 'lucide-react';
 
 export interface ProjectData {
   projectId: string;
@@ -38,8 +39,9 @@ export function ProjectSection({
     <div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Projekt</h2>
-        <button onClick={onVisibilityToggle} className="text-sm opacity-60 hover:opacity-100">
-          {isVisible ? 'Ausblenden' : 'Einblenden'}
+        <button onClick={onVisibilityToggle} className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+          {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        
         </button>
       </div>
       

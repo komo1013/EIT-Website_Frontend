@@ -20,7 +20,7 @@ import Logo from "@/logos/fs-eit-logo.svg";
 import ChecklistIcon from "@/../public/checkliste.svg";
 import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation"; // Import the hook to detect route changes
+import { usePathname, useRouter, useSearchParams } from "next/navigation"; // Import the hook to detect route changes
 import { useSession, signOut } from "next-auth/react";
 
 export const MoonIcon = ({ className }: { className?: string }) => {
@@ -138,6 +138,10 @@ export default function App() {
   const [mounted, setMounted] = React.useState(false);
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isProfilePage = pathname === "/profile";
+  const isEditorEnabled = isProfilePage && searchParams.get("editor") === "1";
 
   // run as soon as the component mounts
   React.useEffect(() => {
@@ -147,6 +151,20 @@ export default function App() {
   React.useEffect(() => {
     setIsMenuOpen(false); // Close the navigation panel
   }, [pathname]);
+
+  const toggleEditorMode = () => {
+    if (!isProfilePage) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (isEditorEnabled) {
+      params.delete("editor");
+    } else {
+      params.set("editor", "1");
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `/profile?${queryString}` : "/profile");
+  };
 
   const menuItems = [
     { label: "Wer sind wir?", href: "/about" },
@@ -192,6 +210,17 @@ export default function App() {
       </NavbarContent>
 
       <NavbarContent justify="end">
+        {isProfilePage && (
+          <NavbarItem>
+            <button
+              type="button"
+              onClick={toggleEditorMode}
+              className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/15"
+            >
+              {isEditorEnabled ? "Editor: An" : "Editor"}
+            </button>
+          </NavbarItem>
+        )}
         <NavbarItem>
           <AccDropdownLoggedOut />
         </NavbarItem>

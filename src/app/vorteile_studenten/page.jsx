@@ -207,15 +207,15 @@ export default function App() {
       <div className="flex flex-col items-center justify-center pt-[80px]">
         <h1 className="text-4xl font-bold mb-6 text-white">Vorteile für Studenten</h1>
         <div className="flex flex-wrap gap-2 mb-6 justify-center max-w-4xl px-4">
-         <button
-           onClick={() => setSelectedKategorie(null)}
-           className={`px-4 py-2 rounded-full font-medium transition-all duration-200 ${
-             selectedKategorie === null 
-               ? 'bg-white text-gray-900' 
-               : 'bg-white/20 text-white hover:bg-white/30'
-           }`}
+          <button
+            onClick={() => setSelectedKategorie(null)}
+            className={`px-4 py-2 rounded-full font-medium transition-all duration-200 ${
+              selectedKategorie === null 
+                ? 'bg-white text-gray-900' 
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
           >
-           Alle
+          Alle
           </button>
           {alleKategorien.map((kategorie) => (
             <button
@@ -230,7 +230,7 @@ export default function App() {
               {kategorie}
             </button>
           ))}
-         </div>
+        </div>
         
         {/* Container für Liste und Info-Block nebeneinander */}
         <div className="flex flex-row gap-8 items-start justify-center w-full max-w-6xl px-4">

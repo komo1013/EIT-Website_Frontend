@@ -1,5 +1,5 @@
 import { ColorTheme } from './profile-card';
-
+import { Eye, EyeOff } from 'lucide-react';
 export interface StudyMilestone {
   id: string;
   title: string;
@@ -28,8 +28,8 @@ export function StudyChecklist({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Studien-Checkliste</h2>
         {isOwner && (
-          <button onClick={onVisibilityToggle} className="text-sm opacity-60 hover:opacity-100">
-            {isVisible ? 'Ausblenden' : 'Einblenden'}
+          <button onClick={onVisibilityToggle} className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+          {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         )}
       </div>
