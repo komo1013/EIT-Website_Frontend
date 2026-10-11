@@ -170,7 +170,8 @@ export default function App() {
     { label: "Wer sind wir?", href: "/about" },
     { label: "Team", href: "/team" },
     { label: "Vorteile für Studenten", href: "/vorteile_studenten"},
-    { label: "Profil", href: "/profile" }
+    { label: "Profil", href: "/profile" },
+    { label: "Kalender", href: "/calendar" },
   ];
 
   return (

@@ -344,6 +344,60 @@ export default function ProfilePage() {
     }));
   };
 
+  const addProjectTask = () => {
+    setProjectData(prev => ({
+      ...prev,
+      tasks: [
+        ...prev.tasks,
+        {
+          id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          title: 'Neue Aufgabe',
+          completed: false,
+        },
+      ],
+    }));
+  };
+
+  const removeProjectTask = (taskId: string) => {
+    setProjectData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(task => task.id !== taskId),
+    }));
+  };
+
+  const moveProjectTask = (taskId: string, direction: 'up' | 'down') => {
+    setProjectData(prev => {
+      const index = prev.tasks.findIndex(task => task.id === taskId);
+      if (index < 0) return prev;
+
+      const nextIndex = direction === 'up' ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= prev.tasks.length) return prev;
+
+      const nextTasks = [...prev.tasks];
+      const [task] = nextTasks.splice(index, 1);
+      nextTasks.splice(nextIndex, 0, task);
+
+      return { ...prev, tasks: nextTasks };
+    });
+  };
+
+  const reorderProjectTask = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+
+    setProjectData(prev => {
+      const tasks = [...prev.tasks];
+      const fromIndex = tasks.findIndex(task => task.id === draggedId);
+      const toIndex = tasks.findIndex(task => task.id === targetId);
+
+      if (fromIndex < 0 || toIndex < 0) return prev;
+
+      const [movedTask] = tasks.splice(fromIndex, 1);
+      tasks.splice(toIndex, 0, movedTask);
+
+      return { ...prev, tasks };
+    });
+  };
+
   const createLab = (semester: number, name = 'Neues Labor'): Lab => {
     const today = new Date();
     const startDate = today.toISOString().slice(0, 10);
@@ -409,6 +463,95 @@ export default function ProfilePage() {
           : sem
       )
     );
+  };
+
+  const moveLabInSemester = (semester: number, labId: string, direction: 'up' | 'down') => {
+    setSemesterData(prev =>
+      prev.map(sem => {
+        if (sem.semester !== semester) return sem;
+
+        const index = sem.labs.findIndex(lab => lab.id === labId);
+        if (index < 0) return sem;
+
+        const nextIndex = direction === 'up' ? index - 1 : index + 1;
+        if (nextIndex < 0 || nextIndex >= sem.labs.length) return sem;
+
+        const nextLabs = [...sem.labs];
+        const [lab] = nextLabs.splice(index, 1);
+        nextLabs.splice(nextIndex, 0, lab);
+
+        return { ...sem, labs: nextLabs };
+      })
+    );
+  };
+
+  const reorderLabInSemester = (semester: number, draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+
+    setSemesterData(prev =>
+      prev.map(sem => {
+        if (sem.semester !== semester) return sem;
+
+        const labs = [...sem.labs];
+        const fromIndex = labs.findIndex(lab => lab.id === draggedId);
+        const toIndex = labs.findIndex(lab => lab.id === targetId);
+
+        if (fromIndex < 0 || toIndex < 0) return sem;
+
+        const [movedLab] = labs.splice(fromIndex, 1);
+        labs.splice(toIndex, 0, movedLab);
+
+        return { ...sem, labs };
+      })
+    );
+  };
+
+  const addStudyMilestone = () => {
+    setStudyMilestones(prev => [
+      ...prev,
+      {
+        id: `milestone-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        title: 'Neues Ziel',
+        completed: false,
+      },
+    ]);
+  };
+
+  const removeStudyMilestone = (milestoneId: string) => {
+    setStudyMilestones(prev => prev.filter(milestone => milestone.id !== milestoneId));
+  };
+
+  const moveStudyMilestone = (milestoneId: string, direction: 'up' | 'down') => {
+    setStudyMilestones(prev => {
+      const index = prev.findIndex(milestone => milestone.id === milestoneId);
+      if (index < 0) return prev;
+
+      const nextIndex = direction === 'up' ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev;
+
+      const nextMilestones = [...prev];
+      const [milestone] = nextMilestones.splice(index, 1);
+      nextMilestones.splice(nextIndex, 0, milestone);
+
+      return nextMilestones;
+    });
+  };
+
+  const reorderStudyMilestone = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+
+    setStudyMilestones(prev => {
+      const milestones = [...prev];
+      const fromIndex = milestones.findIndex(milestone => milestone.id === draggedId);
+      const toIndex = milestones.findIndex(milestone => milestone.id === targetId);
+
+      if (fromIndex < 0 || toIndex < 0) return prev;
+
+      const [movedMilestone] = milestones.splice(fromIndex, 1);
+      milestones.splice(toIndex, 0, movedMilestone);
+
+      return milestones;
+    });
   };
 
   const STORAGE_KEY = 'profile-editor-state-v1';
@@ -669,7 +812,13 @@ export default function ProfilePage() {
         {/* Profile Section */}
         <div className="relative flex items-center justify-center p-4 min-h-screen pt-2">
           <div className="relative z-10 w-full max-w-md">
-            <ProfileCard profile={studentProfile} colorTheme={colorTheme} />
+            <ProfileCard 
+              profile={studentProfile}
+              colorTheme={colorTheme}
+              isEditorMode={editorMode}
+              specializationOptions={specializationOptions}
+              onSpecializationChange={(label, icon) => handleSpecializationSelect({ label, icon })}
+            />
           </div>
           
           {editorMode && (
@@ -680,250 +829,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {editorMode && (
-          <div className="relative z-10 max-w-6xl mx-auto px-8 pb-8">
-            <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
-                <h3 className="mb-3 text-lg font-semibold text-white">Profil bearbeiten</h3>
-                <div className="space-y-3">
-                  <label className="block text-sm text-slate-200">
-                    Name
-                    <input
-                      value={studentProfile.name}
-                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, name: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                    />
-                  </label>
-                  <label className="block text-sm text-slate-200">
-                    Studiengang
-                    <input
-                      value={studentProfile.studyProgram}
-                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, studyProgram: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                    />
-                  </label>
-                  <label className="block text-sm text-slate-200">
-                    Motivationsbild URL
-                    <input
-                      value={studentProfile.motivationImageUrl || ''}
-                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, motivationImageUrl: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                    />
-                  </label>
-                  <label className="block text-sm text-slate-200">
-                    Bio
-                    <textarea
-                      value={studentProfile.bio || ''}
-                      onChange={(e) => setStudentProfile((prev) => ({ ...prev, bio: e.target.value }))}
-                      className="mt-1 min-h-24 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                    />
-                  </label>
-                  <label className="block text-sm text-slate-200">
-                    Vertiefungsrichtung
-                    <div className="space-y-2">
-                      {specializationOptions.map((option) => {
-                        const selected = studentProfile.specialization === option.label;
-                      
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => handleSpecializationSelect(option)}
-                            className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left ${
-                              selected
-                                ? "border-blue-400 bg-blue-500/10"
-                                : "border-white/10 bg-slate-950/30"
-                            }`}
-                          >
-                            <img src={option.icon} alt="" className="h-5 w-5" />
-                            <span>{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </label>
-  
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
-                <h3 className="mb-3 text-lg font-semibold text-white">Projekt</h3>
-                <div className="space-y-3">
-                  <label className="block text-sm text-slate-200">
-                    Professor
-                    <input
-                      value={projectData.professor}
-                      onChange={(e) => setProjectData((prev) => ({ ...prev, professor: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                    />
-                  </label>
-                  {projectData.tasks.map((task) => (
-                    <label key={task.id} className="block text-sm text-slate-200">
-                      {task.title}
-                      <input
-                        value={task.title}
-                        onChange={(e) => updateProjectTask(task.id, e.target.value)}
-                        className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
-                <h3 className="mb-3 text-lg font-semibold text-white">Studium</h3>
-                <div className="space-y-3">
-                  {studyMilestones.map((milestone) => (
-                    <label key={milestone.id} className="block text-sm text-slate-200">
-                      Meilenstein
-                      <input
-                        value={milestone.title}
-                        onChange={(e) => updateMilestoneTitle(milestone.id, e.target.value)}
-                        className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-xl border border-white/20 bg-slate-900/30 p-4 backdrop-blur-md">
-              <h3 className="mb-3 text-lg font-semibold text-white">Semester Vorbereitung & Labore</h3>
-              <div className="space-y-6">
-                {semesterData.map((sem) => (
-                  <div key={sem.semester} className="rounded-lg border border-white/10 bg-slate-950/20 p-3">
-                    <label className="block text-sm text-slate-200">
-                      Semester {sem.semester} – Vorbereitung
-                      <input
-                        value={sem.preparation}
-                        onChange={(e) => updateSemesterPreparation(sem.semester, e.target.value)}
-                        className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                      />
-                    </label>
-
-                    <div className="mt-3 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => addLabToSemester(sem.semester)}
-                        className="rounded-md border border-blue-400/40 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-100 transition hover:bg-blue-500/20"
-                      >
-                        Labor hinzufügen
-                      </button>
-                    </div>
-
-                    {sem.labs.length > 0 ? (
-                      <div className="mt-4 space-y-3">
-                        {sem.labs.map((lab) => (
-                          <div key={lab.id} className="rounded-md border border-white/10 bg-slate-900/30 p-3">
-                            <div className="grid gap-3 md:grid-cols-2">
-                              <label className="block text-xs text-slate-300">
-                                Laborname
-                                <input
-                                  value={lab.name}
-                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'name', e.target.value)}
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                                />
-                              </label>
-                              <label className="block text-xs text-slate-300">
-                                Raum
-                                <input
-                                  value={lab.location}
-                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'location', e.target.value)}
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                                />
-                              </label>
-                            </div>
-
-                            <div className="mt-3 grid gap-3 md:grid-cols-2">
-                              <label className="block text-xs text-slate-300">
-                                Wochentag
-                                <select
-                                  value={lab.dayOfWeek ?? 0}
-                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'dayOfWeek', Number(e.target.value))}
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                                >
-                                  {['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'].map((weekday, index) => (
-                                    <option key={weekday} value={index}>{weekday}</option>
-                                  ))}
-                                </select>
-                              </label>
-                              <label className="block text-xs text-slate-300">
-                                Uhrzeit
-                                <input
-                                  type="time"
-                                  value={lab.time ?? ''}
-                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'time', e.target.value || undefined)}
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                                />
-                              </label>
-                            </div>
-
-                            <div className="mt-3 grid gap-3 md:grid-cols-2">
-                              <label className="block text-xs text-slate-300">
-                                Startdatum
-                                <input
-                                  type="date"
-                                  value={lab.startDate ?? ''}
-                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'startDate', e.target.value || undefined)}
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                                />
-                              </label>
-                              <label className="block text-xs text-slate-300">
-                                Enddatum
-                                <input
-                                  type="date"
-                                  value={lab.endDate ?? ''}
-                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'endDate', e.target.value || undefined)}
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                                />
-                              </label>
-                            </div>
-
-                            <div className="mt-3 grid gap-3 md:grid-cols-2">
-                              <label className="block text-xs text-slate-300">
-                                Häufigkeit
-                                <select
-                                  value={lab.frequency ?? 'weekly'}
-                                  onChange={(e) => updateLabField(sem.semester, lab.id, 'frequency', e.target.value as 'once' | 'weekly' | 'biweekly')}
-                                  className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                                >
-                                  <option value="once">Einmalig</option>
-                                  <option value="weekly">Wöchentlich</option>
-                                  <option value="biweekly">Alle 2 Wochen</option>
-                                </select>
-                              </label>
-
-                              <div className="flex items-end">
-                                <button
-                                  type="button"
-                                  onClick={() => removeLabFromSemester(sem.semester, lab.id)}
-                                  className="w-full rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-100 transition hover:bg-red-500/20"
-                                >
-                                  Labor löschen
-                                </button>
-                              </div>
-                            </div>
-
-                            <label className="mt-3 block text-xs text-slate-300">
-                              Vorbereitung
-                              <input
-                                value={lab.preparation ?? ''}
-                                onChange={(e) => updateLabField(sem.semester, lab.id, 'preparation', e.target.value)}
-                                className="mt-1 w-full rounded-md border border-white/10 bg-slate-950/40 px-2 py-1.5 text-white outline-none"
-                              />
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="mt-3 text-sm text-slate-400">Keine Labore für dieses Semester.</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Content Section */}
         <div className="relative p-8 min-h-screen">
@@ -972,7 +877,13 @@ export default function ProfilePage() {
                     onProjectUpdate={setProjectData}
                     currentUserId={currentUserId}
                     isVisible={projectsVisible}
+                    isEditorMode={editorMode}
                     onVisibilityToggle={() => setProjectsVisible(!projectsVisible)}
+                    onTaskTitleChange={updateProjectTask}
+                    onAddTask={addProjectTask}
+                    onRemoveTask={removeProjectTask}
+                    onMoveTask={moveProjectTask}
+                    onReorderTask={reorderProjectTask}
                     colorTheme={colorTheme}
                   />
                 )}
@@ -990,8 +901,14 @@ export default function ProfilePage() {
                     colorTheme={colorTheme}
                     milestones={studyMilestones}
                     onMilestoneToggle={handleMilestoneToggle}
+                    onMilestoneTitleChange={updateMilestoneTitle}
+                    onAddMilestone={addStudyMilestone}
+                    onRemoveMilestone={removeStudyMilestone}
+                    onMoveMilestone={moveStudyMilestone}
+                    onReorderMilestone={reorderStudyMilestone}
                     isOwner={isOwner}
                     isVisible={studyVisible}
+                    isEditorMode={editorMode}
                     onVisibilityToggle={() => setStudyVisible(!studyVisible)}
                   />
                 )}
@@ -1004,7 +921,14 @@ export default function ProfilePage() {
                     onSemesterUpdate={setSemesterData}
                     isOwner={isOwner}
                     isVisible={semesterVisible}
+                    isEditorMode={editorMode}
                     onVisibilityToggle={() => setSemesterVisible(!semesterVisible)}
+                    onAddLabToSemester={addLabToSemester}
+                    onRemoveLabFromSemester={removeLabFromSemester}
+                    onMoveLabInSemester={moveLabInSemester}
+                    onReorderLabInSemester={reorderLabInSemester}
+                    onUpdateLabField={updateLabField}
+                    onUpdateSemesterPreparation={updateSemesterPreparation}
                   />
                 )}
               </div>

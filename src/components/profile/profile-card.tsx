@@ -17,9 +17,18 @@ export interface StudentProfile {
 interface ProfileCardProps {
   profile: StudentProfile;
   colorTheme?: ColorTheme;
+  isEditorMode?: boolean;
+  specializationOptions?: Array<{ label: string; icon: string }>;
+  onSpecializationChange?: (label: string, icon: string) => void;
 }
 
-export function ProfileCard({ profile, colorTheme }: ProfileCardProps) {
+export function ProfileCard({
+  profile,
+  colorTheme,
+  isEditorMode,
+  specializationOptions,
+  onSpecializationChange,
+}: ProfileCardProps) {
   const accentStyles: Record<ColorTheme, string> = {
     blue: 'border-blue-400/30 bg-blue-500/10 text-blue-100',
     orange: 'border-orange-400/30 bg-orange-500/10 text-orange-100',
@@ -39,12 +48,12 @@ export function ProfileCard({ profile, colorTheme }: ProfileCardProps) {
           <p className="text-lg text-slate-200">{profile.studyProgram}</p>
         </div>
 
-        {profile.specializationIcon && (
-          <div className={`flex h-25 w-25 items-center justify-center rounded-2xl border ${accent}`}>
+        {(profile.specializationIcon || isEditorMode) && (
+          <div className={`flex h-20 w-20 items-center justify-center rounded-2xl border ${accent}`}>
             <img
-              src={profile.specializationIcon}
+              src={profile.specializationIcon || '/images/Amter_Icons/automatisierung.svg'}
               alt={profile.specialization || 'Vertiefungsbild'}
-              className="h-20 w-20 object-contain"
+              className="h-14 w-14 object-contain"
             />
           </div>
         )}
@@ -60,6 +69,30 @@ export function ProfileCard({ profile, colorTheme }: ProfileCardProps) {
             />
           )}
           <span>{profile.specialization}</span>
+        </div>
+      )}
+
+      {isEditorMode && specializationOptions && onSpecializationChange && (
+        <div className="mt-4 space-y-2">
+          {specializationOptions.map((option) => {
+            const selected = profile.specialization === option.label;
+
+            return (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => onSpecializationChange(option.label, option.icon)}
+                className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition ${
+                  selected
+                    ? 'border-blue-400 bg-blue-500/10 text-white'
+                    : 'border-white/10 bg-slate-950/30 text-slate-200 hover:bg-slate-900/50'
+                }`}
+              >
+                <img src={option.icon} alt="" className="h-5 w-5 object-contain" />
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
         </div>
       )}
 
