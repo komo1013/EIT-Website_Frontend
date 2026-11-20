@@ -20,13 +20,39 @@ import Logo from "@/logos/fs-eit-logo.svg";
 import ChecklistIcon from "@/../public/checkliste.svg";
 import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation"; // Import the hook to detect route changes
-import { useAuth } from "@/contexts/AuthContext";
+import { usePathname, useRouter, useSearchParams } from "next/navigation"; // Import the hook to detect route changes
+import { useSession, signOut } from "next-auth/react";
+
+export const MoonIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M14.438 10.148c.19-.425-.321-.787-.748-.601A5.5 5.5 0 0 1 6.453 2.31c.186-.427-.176-.938-.6-.748a6.501 6.501 0 1 0 8.585 8.586Z" />
+    </svg>
+  );
+};
+
+export const SunIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M8 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 1ZM10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM12.95 4.11a.75.75 0 1 0-1.06-1.06l-1.062 1.06a.75.75 0 0 0 1.061 1.062l1.06-1.061ZM15 8a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 15 8ZM11.89 12.95a.75.75 0 0 0 1.06-1.06l-1.06-1.062a.75.75 0 0 0-1.062 1.061l1.061 1.06ZM8 12a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 12ZM5.172 11.89a.75.75 0 0 0-1.061-1.062L3.05 11.89a.75.75 0 1 0 1.06 1.06l1.06-1.06ZM4 8a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 4 8ZM4.11 5.172A.75.75 0 0 0 5.173 4.11L4.11 3.05a.75.75 0 1 0-1.06 1.06l1.06 1.06Z" />
+    </svg>
+  );
+};
 
 function AccDropdownLoggedOut() {
   const [mounted, setMounted] = React.useState(false);
   const { theme, setTheme } = useTheme();
-  const { isLoggedIn, logout } = useAuth();
+  const { data: session } = useSession();
 
   // run as soon as the component mounts
   React.useEffect(() => {
@@ -36,6 +62,9 @@ function AccDropdownLoggedOut() {
   // if we are on the server, we load with the default theme
   const currentIsSelected = mounted ? theme === "dark" : false;
 
+  const userName = (session?.user as any)?.given_name || (session?.user as any)?.nickname || session?.user?.name || "Guest";
+  const userImage = session?.user?.image || undefined;
+
   return (
     <div className="flex items-center gap-4">
       <Dropdown
@@ -44,44 +73,59 @@ function AccDropdownLoggedOut() {
         className="bg-white dark:bg-black bg-opacity-40 backdrop-blur-full"
       >
         <DropdownTrigger>
-          {isLoggedIn ? (
-            <button className="transition w-8 h-8 flex items-center justify-center">
-              <ChecklistIcon className="w-8 h-8" />
-            </button>
-          ) : (
-            <Avatar as="button" className="transition w-8 h-8" size="sm" />
-          )}
+          <Avatar as="button" src={userImage} className="transition w-8 h-8" size="sm" />
         </DropdownTrigger>
         <DropdownMenu>
-          {isLoggedIn ? (
-            <>
-              <DropdownItem key="profile">
-                <Link href="/profile" className="w-full">
-                  <p className="text-md font-montserrat">Profil</p>
-                </Link>
-              </DropdownItem>
-              <DropdownItem key="nextcloud">
-                <Link href="https://cloud.eit-hka.de" target="_blank" rel="noopener noreferrer" className="w-full">
-                  <p className="text-md font-montserrat">Nextcloud</p>
-                </Link>
-              </DropdownItem>
-              <DropdownItem key="logout" onClick={logout}>
-                <p className="text-md font-montserrat">Logout</p>
-              </DropdownItem>
-            </>
+          {!session ? (
+            <DropdownItem key="login">
+              <Link href="/accounts" className="w-full">
+                <p className="text-md font-montserrat">Login</p>
+              </Link>
+            </DropdownItem>
           ) : (
-            <>
-              <DropdownItem key="login">
-                <Link href="/accounts" className="w-full">
-                  <p className="text-md font-montserrat">Login</p>
-                </Link>
-              </DropdownItem>
-              <DropdownItem key="nextcloud">
-                <Link href="https://cloud.eit-hka.de" target="_blank" rel="noopener noreferrer" className="w-full">
-                  <p className="text-md font-montserrat">Nextcloud</p>
-                </Link>
-              </DropdownItem>
-            </>
+            <DropdownItem key="userinfo">
+              <Link href="/profile" className="w-full">
+                <p className="text-md font-montserrat">{userName}</p>
+              </Link>
+            </DropdownItem>
+          )}
+
+          <DropdownItem key="nextcloud">
+            <Link href="https://cloud.eit-hka.de" target="_blank" rel="noopener noreferrer" className="w-full">
+              <p className="text-md font-montserrat">Nextcloud</p>
+            </Link>
+          </DropdownItem>
+
+          <DropdownItem
+            key="theme"
+            className="cursor-default"
+            startContent={<p className="text-md font-montserrat">Dark mode</p>}
+          >
+            <Switch
+              size="md"
+              isSelected={currentIsSelected}
+              onValueChange={() =>
+                setTheme(theme === "dark" ? "light" : "dark")
+              }
+              thumbIcon={({ isSelected, className }) =>
+                isSelected ? (
+                  <MoonIcon className={className} />
+                ) : (
+                  <SunIcon className={className} />
+                )
+              }
+            ></Switch>
+          </DropdownItem>
+
+          {session && (
+            <DropdownItem 
+              key="logout" 
+              className="text-danger" 
+              color="danger"
+              onPress={() => signOut()}
+            >
+              <p className="text-md font-montserrat">Sign Out</p>
+            </DropdownItem>
           )}
         </DropdownMenu>
       </Dropdown>
@@ -94,6 +138,10 @@ export default function App() {
   const [mounted, setMounted] = React.useState(false);
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isProfilePage = pathname === "/profile";
+  const isEditorEnabled = isProfilePage && searchParams.get("editor") === "1";
 
   // run as soon as the component mounts
   React.useEffect(() => {
@@ -104,11 +152,26 @@ export default function App() {
     setIsMenuOpen(false); // Close the navigation panel
   }, [pathname]);
 
+  const toggleEditorMode = () => {
+    if (!isProfilePage) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (isEditorEnabled) {
+      params.delete("editor");
+    } else {
+      params.set("editor", "1");
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `/profile?${queryString}` : "/profile");
+  };
+
   const menuItems = [
     { label: "Wer sind wir?", href: "/about" },
     { label: "Team", href: "/team" },
     { label: "Vorteile für Studenten", href: "/vorteile_studenten"},
-    { label: "Profil", href: "/profile" }
+    { label: "Profil", href: "/profile" },
+    { label: "Kalender", href: "/calendar" },
   ];
 
   return (
@@ -148,6 +211,17 @@ export default function App() {
       </NavbarContent>
 
       <NavbarContent justify="end">
+        {isProfilePage && (
+          <NavbarItem>
+            <button
+              type="button"
+              onClick={toggleEditorMode}
+              className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/15"
+            >
+              {isEditorEnabled ? "Editor: An" : "Editor"}
+            </button>
+          </NavbarItem>
+        )}
         <NavbarItem>
           <AccDropdownLoggedOut />
         </NavbarItem>

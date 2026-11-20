@@ -2,7 +2,8 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "next/navigation";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import NavBar from "@/components/navbar";
 import { ProfileCard, ColorTheme, StudentProfile } from '@/components/profile/profile-card';
@@ -38,8 +39,7 @@ function MiniCalendar({
 }) {
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   
-  // Today's date: October 24, 2025
-  const today = new Date(2025, 9, 24); // Month is 0-indexed
+  const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const currentDay = today.getDate();
@@ -59,36 +59,73 @@ function MiniCalendar({
     days.push(i);
   }
 
-  // Helper function to check if a lab occurs on a specific date
+  const getLabRecurringWeekday = (lab: Lab): number | null => {
+    if (lab.dayOfWeek !== undefined && lab.dayOfWeek >= 0 && lab.dayOfWeek <= 6) {
+      return lab.dayOfWeek;
+    }
+
+    if (!lab.startDate) {
+      return null;
+    }
+
+    const startDate = new Date(lab.startDate);
+    if (Number.isNaN(startDate.getTime())) {
+      return null;
+    }
+
+    return startDate.getDay();
+  };
+
   const getLabsOnDate = (day: number): LabOnDay[] => {
     const targetDate = new Date(currentYear, currentMonth, day);
     const labsOnDay: LabOnDay[] = [];
 
     semesterData.forEach(semData => {
       semData.labs.forEach((lab: Lab) => {
-        if (!lab.startDate) return;
+        const recurrenceDay = getLabRecurringWeekday(lab);
+        if (recurrenceDay === null) return;
 
-        const startDate = new Date(lab.startDate);
-        if (startDate > targetDate) return; // Lab hasn't started yet
+        if (lab.endDate) {
+          const endDate = new Date(`${lab.endDate}T23:59:59`);
+          if (targetDate > endDate) return;
+        }
+
+        if (!lab.startDate) {
+          if (targetDate.getDay() === recurrenceDay) {
+            labsOnDay.push({ lab, semester: semData.semester });
+          }
+          return;
+        }
+
+        const startDate = new Date(`${lab.startDate}T00:00:00`);
+        if (Number.isNaN(startDate.getTime())) {
+          return;
+        }
+
+        if (startDate > targetDate) return;
 
         const daysDiff = Math.floor((targetDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (lab.frequency === 'weekly') {
-          // Check if it's the same day of week
-          if (targetDate.getDay() === startDate.getDay()) {
+
+        if (lab.frequency === 'once') {
+          if (targetDate.getTime() === startDate.getTime()) {
+            labsOnDay.push({ lab, semester: semData.semester });
+          }
+        } else if (lab.frequency === 'weekly') {
+          if (targetDate.getDay() === recurrenceDay) {
             labsOnDay.push({ lab, semester: semData.semester });
           }
         } else if (lab.frequency === 'biweekly') {
-          // Check if it's the same day of week and the week count is even
-          if (targetDate.getDay() === startDate.getDay() && daysDiff % 14 === 0) {
+          if (targetDate.getDay() === recurrenceDay && daysDiff % 14 === 0) {
             labsOnDay.push({ lab, semester: semData.semester });
           }
+        } else if (targetDate.getDay() === recurrenceDay) {
+          labsOnDay.push({ lab, semester: semData.semester });
         }
       });
     });
 
     return labsOnDay;
-  }
+  };
   
   return (
     <div className="relative">
@@ -237,12 +274,19 @@ function MiniCalendar({
 }
 
 export default function ProfilePage() {
-  const { isAuthenticated, user, logout ,login } = useAuth();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
+  const user = session?.user;
+  const login = () => signIn("authentik");
+  const logout = () => signOut();
+  const searchParams = useSearchParams();
+
   const { colorTheme, setColorTheme, currentBg } = useThemeContext();
   
   const [isOn, setIsOn] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [streamParticles, setStreamParticles] = useState<StreamParticle[]>([]);
+  const [editorMode, setEditorMode] = useState(searchParams.get("editor") === "1");
   
   // User State - In Produktion: aus Datenbank oder Context
   const [isOwner, setIsOwner] = useState(true); // Simuliert: aktueller User ist der Kontoinhaber
@@ -283,38 +327,254 @@ export default function ProfilePage() {
     );
   };
 
+  const updateMilestoneTitle = (milestoneId: string, title: string) => {
+    setStudyMilestones(milestones =>
+      milestones.map(milestone =>
+        milestone.id === milestoneId ? { ...milestone, title } : milestone
+      )
+    );
+  };
+
+  const updateProjectTask = (taskId: string, title: string) => {
+    setProjectData(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(task =>
+        task.id === taskId ? { ...task, title } : task
+      )
+    }));
+  };
+
+  const addProjectTask = () => {
+    setProjectData(prev => ({
+      ...prev,
+      tasks: [
+        ...prev.tasks,
+        {
+          id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          title: 'Neue Aufgabe',
+          completed: false,
+        },
+      ],
+    }));
+  };
+
+  const removeProjectTask = (taskId: string) => {
+    setProjectData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(task => task.id !== taskId),
+    }));
+  };
+
+  const moveProjectTask = (taskId: string, direction: 'up' | 'down') => {
+    setProjectData(prev => {
+      const index = prev.tasks.findIndex(task => task.id === taskId);
+      if (index < 0) return prev;
+
+      const nextIndex = direction === 'up' ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= prev.tasks.length) return prev;
+
+      const nextTasks = [...prev.tasks];
+      const [task] = nextTasks.splice(index, 1);
+      nextTasks.splice(nextIndex, 0, task);
+
+      return { ...prev, tasks: nextTasks };
+    });
+  };
+
+  const reorderProjectTask = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+
+    setProjectData(prev => {
+      const tasks = [...prev.tasks];
+      const fromIndex = tasks.findIndex(task => task.id === draggedId);
+      const toIndex = tasks.findIndex(task => task.id === targetId);
+
+      if (fromIndex < 0 || toIndex < 0) return prev;
+
+      const [movedTask] = tasks.splice(fromIndex, 1);
+      tasks.splice(toIndex, 0, movedTask);
+
+      return { ...prev, tasks };
+    });
+  };
+
+  const createLab = (semester: number, name = 'Neues Labor'): Lab => {
+    const today = new Date();
+    const startDate = today.toISOString().slice(0, 10);
+    const endDate = new Date(today.getTime() + 100 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    return {
+      id: `lab-${semester}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name,
+      location: 'Raum TBD',
+      semester,
+      preparation: 'Vorbereitung folgt',
+      startDate,
+      endDate,
+      dayOfWeek: 0,
+      time: '09:00',
+      frequency: 'weekly',
+    };
+  };
+
+  const updateSemesterPreparation = (semester: number, preparation: string) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester ? { ...sem, preparation } : sem
+      )
+    );
+  };
+
+  const updateLabField = (
+    semester: number,
+    labId: string,
+    field: keyof Lab,
+    value: string | number | undefined
+  ) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester
+          ? {
+              ...sem,
+              labs: sem.labs.map(lab =>
+                lab.id === labId ? { ...lab, [field]: value } : lab
+              ),
+            }
+          : sem
+      )
+    );
+  };
+
+  const addLabToSemester = (semester: number) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester
+          ? { ...sem, labs: [...sem.labs, createLab(semester)] }
+          : sem
+      )
+    );
+  };
+
+  const removeLabFromSemester = (semester: number, labId: string) => {
+    setSemesterData(prev =>
+      prev.map(sem =>
+        sem.semester === semester
+          ? { ...sem, labs: sem.labs.filter(lab => lab.id !== labId) }
+          : sem
+      )
+    );
+  };
+
+  const moveLabInSemester = (semester: number, labId: string, direction: 'up' | 'down') => {
+    setSemesterData(prev =>
+      prev.map(sem => {
+        if (sem.semester !== semester) return sem;
+
+        const index = sem.labs.findIndex(lab => lab.id === labId);
+        if (index < 0) return sem;
+
+        const nextIndex = direction === 'up' ? index - 1 : index + 1;
+        if (nextIndex < 0 || nextIndex >= sem.labs.length) return sem;
+
+        const nextLabs = [...sem.labs];
+        const [lab] = nextLabs.splice(index, 1);
+        nextLabs.splice(nextIndex, 0, lab);
+
+        return { ...sem, labs: nextLabs };
+      })
+    );
+  };
+
+  const reorderLabInSemester = (semester: number, draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+
+    setSemesterData(prev =>
+      prev.map(sem => {
+        if (sem.semester !== semester) return sem;
+
+        const labs = [...sem.labs];
+        const fromIndex = labs.findIndex(lab => lab.id === draggedId);
+        const toIndex = labs.findIndex(lab => lab.id === targetId);
+
+        if (fromIndex < 0 || toIndex < 0) return sem;
+
+        const [movedLab] = labs.splice(fromIndex, 1);
+        labs.splice(toIndex, 0, movedLab);
+
+        return { ...sem, labs };
+      })
+    );
+  };
+
+  const addStudyMilestone = () => {
+    setStudyMilestones(prev => [
+      ...prev,
+      {
+        id: `milestone-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        title: 'Neues Ziel',
+        completed: false,
+      },
+    ]);
+  };
+
+  const removeStudyMilestone = (milestoneId: string) => {
+    setStudyMilestones(prev => prev.filter(milestone => milestone.id !== milestoneId));
+  };
+
+  const moveStudyMilestone = (milestoneId: string, direction: 'up' | 'down') => {
+    setStudyMilestones(prev => {
+      const index = prev.findIndex(milestone => milestone.id === milestoneId);
+      if (index < 0) return prev;
+
+      const nextIndex = direction === 'up' ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev;
+
+      const nextMilestones = [...prev];
+      const [milestone] = nextMilestones.splice(index, 1);
+      nextMilestones.splice(nextIndex, 0, milestone);
+
+      return nextMilestones;
+    });
+  };
+
+  const reorderStudyMilestone = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+
+    setStudyMilestones(prev => {
+      const milestones = [...prev];
+      const fromIndex = milestones.findIndex(milestone => milestone.id === draggedId);
+      const toIndex = milestones.findIndex(milestone => milestone.id === targetId);
+
+      if (fromIndex < 0 || toIndex < 0) return prev;
+
+      const [movedMilestone] = milestones.splice(fromIndex, 1);
+      milestones.splice(toIndex, 0, movedMilestone);
+
+      return milestones;
+    });
+  };
+
+  const STORAGE_KEY = 'profile-editor-state-v1';
+
+  // Example-Profil (später aus Datenbank)
+  const [studentProfile, setStudentProfile] = useState<StudentProfile>({
+    name: user?.name || 'Max Mustermann',
+    email: user?.email || 'max.mustermann@hochschule.de',
+    university: 'Hochschule Karlsruhe',
+    studyProgram: 'Elektro- und Informationstechnik',
+    level: 3,
+    specialization: 'Automatisierungstechnik',
+    specializationIcon: '/images/Amter_Icons/automatisierung.svg',
+    motivationImageUrl: 'https://images.unsplash.com/photo-1744262056245-70eefd885e10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3RpdmF0aW9uJTIwaW5zcGlyYXRpb24lMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYxMTYxMjY4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    bio: 'Leidenschaftlicher Student der Elektrotechnik mit Fokus auf erneuerbare Energien und intelligente Stromnetze. Fasziniert von der Kraft der Elektrizität und ihrer Rolle in der nachhaltigen Zukunft.',
+    linkedinUrl: 'https://linkedin.com',
+    githubUrl: 'https://github.com',
+  });
+
   // Semester Progress State
   const [semesterData, setSemesterData] = useState<SemesterData[]>([
-    { 
-      semester: 1, 
-      labs: [
-        { 
-          id: '1', 
-          name: 'Physik-Labor', 
-          location: 'Gebäude A, Raum 101', 
-          semester: 1,
-          preparation: 'Grundlagen wiederholen',
-          startDate: '2025-10-06', // Monday
-          frequency: 'weekly'
-        }
-      ], 
-      preparation: 'Grundlagen der Elektrotechnik wiederholen' 
-    },
-    { 
-      semester: 2, 
-      labs: [
-        { 
-          id: '2', 
-          name: 'Elektronik-Labor', 
-          location: 'Gebäude A, Raum 203', 
-          semester: 2,
-          preparation: 'Schaltpläne vorbereiten',
-          startDate: '2025-10-08', // Wednesday
-          frequency: 'biweekly'
-        }
-      ], 
-      preparation: 'Schaltungsanalyse vorbereiten' 
-    },
+    { semester: 1, labs: [createLab(1, 'Mikrocontroller-Labor')], preparation: 'Erste Vorlesung vorbereitet' },
+    { semester: 2, labs: [], preparation: '' },
     { semester: 3, labs: [], preparation: '' },
     { semester: 4, labs: [], preparation: '' },
     { semester: 5, labs: [], preparation: '' },
@@ -322,12 +582,56 @@ export default function ProfilePage() {
   ]);
   const [semesterVisible, setSemesterVisible] = useState(true);
 
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (!savedState) return;
+
+      const parsed = JSON.parse(savedState) as {
+        studentProfile?: Partial<StudentProfile>;
+        projectData?: Partial<ProjectData>;
+        studyMilestones?: StudyMilestone[];
+        semesterData?: SemesterData[];
+      };
+
+      if (parsed.studentProfile) {
+        setStudentProfile(prev => ({ ...prev, ...parsed.studentProfile }));
+      }
+      if (parsed.projectData) {
+        setProjectData(prev => ({ ...prev, ...parsed.projectData }));
+      }
+      if (parsed.studyMilestones) {
+        setStudyMilestones(parsed.studyMilestones);
+      }
+      if (parsed.semesterData) {
+        setSemesterData(parsed.semesterData);
+      }
+    } catch (error) {
+      console.warn('Could not restore profile state from localStorage', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ studentProfile, projectData, studyMilestones, semesterData })
+      );
+    } catch (error) {
+      console.warn('Could not save profile state to localStorage', error);
+    }
+  }, [studentProfile, projectData, studyMilestones, semesterData]);
+
+  useEffect(() => {
+    setEditorMode(searchParams.get("editor") === "1");
+  }, [searchParams]);
+
   // Redirect to Authentik login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (status === "unauthenticated") {
       login();  // Direkt zu Authentik weiterleiten
     }
-  }, [isAuthenticated, login]);
+  }, [status]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -348,40 +652,49 @@ export default function ProfilePage() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Animate and clean up particles
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStreamParticles(prev => {
-        // Age all particles and remove old ones
-        return prev
-          .map(p => ({ ...p, age: p.age + 1 }))
-          .filter(p => p.age < 30); // Keep particles for ~30 frames
-      });
-    }, 50); // Update every 50ms
+    // Animate and clean up particles
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setStreamParticles(prev => {
+          // Age all particles and remove old ones
+          return prev
+            .map(p => ({ ...p, age: p.age + 1 }))
+            .filter(p => p.age < 30); // Keep particles for ~30 frames
+        });
+      }, 50); // Update every 50ms
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    }, []);
 
-  if (!isAuthenticated) {
+  const canEdit = isOwner || editorMode;
+  // Option for the Specification selection
+  const specializationOptions = [
+    {
+      id: "automatisierung",
+      label: "Automatisierungstechnik",
+      icon: "/images/zahnrad_a.svg",
+    },
+    {
+      id: "energietechnik",
+      label: "Energietechnik",
+      icon: "/images/electric_e.png",
+    },
+    {
+      id: "Informationstechnik",
+      label: "Informationstechnik",
+      icon: "/images/signal_i.svg",
+    },
+  ];
+  const handleSpecializationSelect = (selected: { label: string; icon: string }) => {
+  setStudentProfile((prev) => ({
+    ...prev,
+    specialization: selected.label,
+    specializationIcon: selected.icon,
+  }));
+  };
+  if (status === "loading" || status === "unauthenticated") {
     return null; // Don't render anything while redirecting
   }
-
-  // Beispiel-Profil (später aus Datenbank)
-  const studentProfile: StudentProfile = {
-    // Automatisch aus Datenbank
-    name: user?.profile?.name || 'Max Mustermann',
-    email: user?.profile?.email || 'max.mustermann@hochschule.de',
-    university: 'Hochschule Karlsruhe',
-    studyProgram: 'Elektro- und Informationstechnik',
-    level: 3, // Level 1-6 → bestimmt die Farbe (1=Blau, 2=Grün, 3=Orange, 4=Lila, 5=Rot, 6=Gold)
-    
-    // Vom Studenten wählbar
-    specialization: 'Elektrotechnik',
-    motivationImageUrl: 'https://images.unsplash.com/photo-1744262056245-70eefd885e10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3RpdmF0aW9uJTIwaW5zcGlyYXRpb24lMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYxMTYxMjY4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    bio: 'Leidenschaftlicher Student der Elektrotechnik mit Fokus auf erneuerbare Energien und intelligente Stromnetze. Fasziniert von der Kraft der Elektrizität und ihrer Rolle in der nachhaltigen Zukunft.',
-    linkedinUrl: 'https://linkedin.com',
-    githubUrl: 'https://github.com',
-  };
 
   return (
     <>
@@ -467,7 +780,7 @@ export default function ProfilePage() {
           }}
         />
         
-        {/* Floating particles */}
+        {/* Floating particles
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(15)].map((_, i) => (
             <div
@@ -482,20 +795,40 @@ export default function ProfilePage() {
               }}
             />
           ))}
+        </div> */}
+
+        <div className="relative z-10 max-w-6xl mx-auto flex justify-end px-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setEditorMode((prev) => !prev)}
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:bg-white/15"
+            aria-label={editorMode ? 'Editor Modus aktiv' : 'Editor Modus'}
+          >
+            <img src="/images/Amter_Icons/einstellung.svg" alt="" className="h-4 w-4" />
+            <span>{editorMode ? 'Editor Modus: Aktiv' : 'Editor Modus'}</span>
+          </button>
         </div>
 
         {/* Profile Section */}
-        <div className="relative flex items-center justify-center p-4 min-h-screen">
-          <div className="relative z-10 w-full">
-            <ProfileCard profile={studentProfile} colorTheme={colorTheme} />
+        <div className="relative flex items-center justify-center p-4 min-h-screen pt-2">
+          <div className="relative z-10 w-full max-w-md">
+            <ProfileCard 
+              profile={studentProfile}
+              colorTheme={colorTheme}
+              isEditorMode={editorMode}
+              specializationOptions={specializationOptions}
+              onSpecializationChange={(label, icon) => handleSpecializationSelect({ label, icon })}
+            />
           </div>
           
-          {/* Color Picker - für Demo/Vorschau */}
-          <ColorPicker 
-            selectedColor={colorTheme} 
-            onColorChange={setColorTheme} 
-          />
+          {editorMode && (
+            <ColorPicker 
+              selectedColor={colorTheme} 
+              onColorChange={setColorTheme} 
+            />
+          )}
         </div>
+
 
         {/* Content Section */}
         <div className="relative p-8 min-h-screen">
@@ -544,7 +877,13 @@ export default function ProfilePage() {
                     onProjectUpdate={setProjectData}
                     currentUserId={currentUserId}
                     isVisible={projectsVisible}
+                    isEditorMode={editorMode}
                     onVisibilityToggle={() => setProjectsVisible(!projectsVisible)}
+                    onTaskTitleChange={updateProjectTask}
+                    onAddTask={addProjectTask}
+                    onRemoveTask={removeProjectTask}
+                    onMoveTask={moveProjectTask}
+                    onReorderTask={reorderProjectTask}
                     colorTheme={colorTheme}
                   />
                 )}
@@ -562,8 +901,14 @@ export default function ProfilePage() {
                     colorTheme={colorTheme}
                     milestones={studyMilestones}
                     onMilestoneToggle={handleMilestoneToggle}
+                    onMilestoneTitleChange={updateMilestoneTitle}
+                    onAddMilestone={addStudyMilestone}
+                    onRemoveMilestone={removeStudyMilestone}
+                    onMoveMilestone={moveStudyMilestone}
+                    onReorderMilestone={reorderStudyMilestone}
                     isOwner={isOwner}
                     isVisible={studyVisible}
+                    isEditorMode={editorMode}
                     onVisibilityToggle={() => setStudyVisible(!studyVisible)}
                   />
                 )}
@@ -576,7 +921,14 @@ export default function ProfilePage() {
                     onSemesterUpdate={setSemesterData}
                     isOwner={isOwner}
                     isVisible={semesterVisible}
+                    isEditorMode={editorMode}
                     onVisibilityToggle={() => setSemesterVisible(!semesterVisible)}
+                    onAddLabToSemester={addLabToSemester}
+                    onRemoveLabFromSemester={removeLabFromSemester}
+                    onMoveLabInSemester={moveLabInSemester}
+                    onReorderLabInSemester={reorderLabInSemester}
+                    onUpdateLabField={updateLabField}
+                    onUpdateSemesterPreparation={updateSemesterPreparation}
                   />
                 )}
               </div>

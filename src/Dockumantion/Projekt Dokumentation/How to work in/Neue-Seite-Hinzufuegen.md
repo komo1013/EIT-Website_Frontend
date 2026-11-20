@@ -26,6 +26,7 @@ Kopiere dieses Template in deine neue `page.tsx`:
 import React from "react";
 import NavBar from "@/components/navbar";
 import { useThemeContext } from "@/contexts/ThemeContext";
+import { useEffect, useState } from "react";
 
 export default function DeineSeitePage() {
   const { currentBg } = useThemeContext();
